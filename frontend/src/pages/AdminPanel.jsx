@@ -28,21 +28,21 @@ const AdminPanel = () => {
 
   const fetchUsers = async () => {
     try {
-      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/api/users', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/users', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       setUsers(res.data);
     } catch (e) { console.error(e); }
   };
 
   const fetchAnnouncements = async () => {
     try {
-      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/api/announcements', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/announcements', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       setAnnouncements(res.data);
     } catch (e) { console.error(e); }
   };
 
   const fetchSchools = async () => {
     try {
-      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/api/schools', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/schools', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       setSchools(res.data);
     } catch (e) { console.error(e); }
   };
@@ -55,7 +55,7 @@ const AdminPanel = () => {
   const handleAddUser = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('https://odevtakipsistemi.onrender.com/api/api/users', { username, password, role_id: parseInt(roleId) }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      await axios.post('https://odevtakipsistemi.onrender.com/api/users', { username, password, role_id: parseInt(roleId) }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       alert('Kullanıcı eklendi');
       fetchUsers();
     } catch (e) { alert('Hata'); }
@@ -64,7 +64,7 @@ const AdminPanel = () => {
   const handleDeleteUser = async (id) => {
     if (!window.confirm('Emin misiniz?')) return;
     try {
-      await axios.delete(`https://odevtakipsistemi.onrender.com/api/api/users/${id}`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      await axios.delete(`https://odevtakipsistemi.onrender.com/api/users/${id}`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       fetchUsers();
     } catch (e) { alert('Hata'); }
   };
@@ -72,7 +72,7 @@ const AdminPanel = () => {
   const handleAddLesson = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('https://odevtakipsistemi.onrender.com/api/api/lessons', { ad: lessonName }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      await axios.post('https://odevtakipsistemi.onrender.com/api/lessons', { ad: lessonName }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       alert('Ders eklendi');
       setLessonName('');
     } catch (e) { alert('Hata'); }
@@ -81,7 +81,7 @@ const AdminPanel = () => {
   const handleAddSchool = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('https://odevtakipsistemi.onrender.com/api/api/schools', { ad: schoolName, adres: schoolAddress }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      await axios.post('https://odevtakipsistemi.onrender.com/api/schools', { ad: schoolName, adres: schoolAddress }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       alert('Okul eklendi');
       setSchoolName(''); setSchoolAddress('');
       fetchSchools();
@@ -91,7 +91,7 @@ const AdminPanel = () => {
   const handleAddAnnouncement = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('https://odevtakipsistemi.onrender.com/api/api/announcements', { baslik: annTitle, icerik: annContent }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      await axios.post('https://odevtakipsistemi.onrender.com/api/announcements', { baslik: annTitle, icerik: annContent }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       alert('Duyuru yayınlandı');
       setAnnTitle(''); setAnnContent('');
       fetchAnnouncements();
@@ -100,7 +100,7 @@ const AdminPanel = () => {
 
   const handleDeleteAnnouncement = async (id) => {
     try {
-      await axios.delete(`https://odevtakipsistemi.onrender.com/api/api/announcements/${id}`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      await axios.delete(`https://odevtakipsistemi.onrender.com/api/announcements/${id}`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       fetchAnnouncements();
     } catch (e) { alert('Hata'); }
   };

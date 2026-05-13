@@ -38,28 +38,28 @@ const TeacherPanel = () => {
 
   const fetchHomeworks = async () => {
     try {
-      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/api/homeworks/class/1', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/homeworks/class/1', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       setHomeworks(res.data);
     } catch (e) { }
   };
 
   const fetchUsers = async () => {
     try {
-      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/api/users', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/users', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       setUsers(res.data);
     } catch (e) { }
   };
 
   const fetchMessages = async () => {
     try {
-      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/api/messages', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/messages', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       setMessages(res.data);
     } catch (e) { }
   };
 
   const checkHomeworkLoad = async () => {
     try {
-      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/api/analytics/homework-load?sinif_id=1', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/analytics/homework-load?sinif_id=1', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       setTotalLoad(res.data.toplam_sure_dakika);
       setWarning(res.data.warning || '');
     } catch (e) { }
@@ -67,7 +67,7 @@ const TeacherPanel = () => {
 
   const fetchSubmissions = async (id) => {
     try {
-      const res = await axios.get(`https://odevtakipsistemi.onrender.com/api/api/homeworks/${id}/submissions`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      const res = await axios.get(`https://odevtakipsistemi.onrender.com/api/homeworks/${id}/submissions`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       setSubmissions(res.data);
       setActiveHomework(id);
       const initGrades = {};
@@ -87,14 +87,14 @@ const TeacherPanel = () => {
     if (dosya) fd.append('dosya', dosya);
 
     try {
-      await axios.post('https://odevtakipsistemi.onrender.com/api/api/homeworks', fd, { headers: { Authorization: `Bearer ${token}` } });
+      await axios.post('https://odevtakipsistemi.onrender.com/api/homeworks', fd, { headers: { Authorization: `Bearer ${token}` } });
       alert('Ödev eklendi'); setShowForm(false); fetchHomeworks(); checkHomeworkLoad();
     } catch (e) { alert('Hata'); }
   };
 
   const handleGradeSubmit = async (id) => {
     try {
-      await axios.put(`https://odevtakipsistemi.onrender.com/api/api/homeworks/submissions/${id}/grade`, { not_degeri: gradeData[id].not_degeri, ogretmen_notu: gradeData[id].ogretmen_notu }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      await axios.put(`https://odevtakipsistemi.onrender.com/api/homeworks/submissions/${id}/grade`, { not_degeri: gradeData[id].not_degeri, ogretmen_notu: gradeData[id].ogretmen_notu }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       alert('Not kaydedildi.');
     } catch (e) { alert('Hata'); }
   };
@@ -102,7 +102,7 @@ const TeacherPanel = () => {
   const handleSendMessage = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('https://odevtakipsistemi.onrender.com/api/api/messages/send', { alici_id: msgTo, mesaj: msgText }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      await axios.post('https://odevtakipsistemi.onrender.com/api/messages/send', { alici_id: msgTo, mesaj: msgText }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       alert('Mesaj gönderildi'); setMsgText('');
     } catch (e) { alert('Hata'); }
   };
