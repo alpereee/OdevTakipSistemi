@@ -20,7 +20,7 @@ const ParentPanel = () => {
   const fetchHomeworks = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('https://odevtakipsistemi.onrender.com/api/homeworks/student/3', {
+      const response = await axios.get('https://odevtakipsistemi.onrender.com/api/api/homeworks/student/3', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setHomeworks(response.data);
@@ -34,7 +34,7 @@ const ParentPanel = () => {
   const fetchAttendance = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/attendance/student/3', { headers: { Authorization: `Bearer ${token}` } });
+      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/api/attendance/student/3', { headers: { Authorization: `Bearer ${token}` } });
       setAttendance(res.data);
     } catch (e) { console.error(e); }
   };
@@ -49,7 +49,7 @@ const ParentPanel = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      await axios.post('https://odevtakipsistemi.onrender.com/api/feedbacks', { mesaj: feedback }, {
+      await axios.post('https://odevtakipsistemi.onrender.com/api/api/feedbacks', { mesaj: feedback }, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setFeedbackSuccess('Geri bildiriminiz öğretmenlere başarıyla iletilmiştir.');
@@ -81,78 +81,78 @@ const ParentPanel = () => {
         {activeTab === 'academic' && (
           <div className="animate-fade-in">
             <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Award size={20} color="var(--primary-color)"/>
+              <Award size={20} color="var(--primary-color)" />
               Öğrenci Not Kartı & Performans Durumu
             </h3>
-        
-        {loading ? (
-          <p>Yükleniyor...</p>
-        ) : (
-          <div className="table-container" style={{ marginBottom: '2rem' }}>
-            <table className="glass-table">
-              <thead>
-                <tr>
-                  <th>Ders & Başlık</th>
-                  <th>Öğretmen</th>
-                  <th>Durum</th>
-                  <th>Alınan Not</th>
-                  <th>Öğretmen Yorumu</th>
-                </tr>
-              </thead>
-              <tbody>
-                {homeworks.length === 0 ? (
-                  <tr>
-                    <td colSpan="5" style={{ textAlign: 'center', padding: '2rem' }}>Sistemde kayıtlı ödev bulunamadı.</td>
-                  </tr>
-                ) : (
-                  homeworks.map(hw => {
-                    const isSubmitted = hw.teslim_id != null;
-                    const hasGrade = hw.not_degeri !== null && hw.not_degeri !== undefined;
-                    
-                    return (
-                      <tr key={hw.id} className={isSubmitted ? 'row-success' : 'row-danger'}>
-                        <td>
-                          <div style={{ fontWeight: '600' }}>{hw.ders_adi}</div>
-                          <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{hw.baslik}</div>
-                        </td>
-                        <td>{hw.ogretmen_adi}</td>
-                        <td>
-                          <span className={`status-badge ${isSubmitted ? 'success' : 'danger'}`}>
-                            {isSubmitted ? 'Teslim Edildi' : 'Bekliyor / Yapılmadı'}
-                          </span>
-                        </td>
-                        <td>
-                          {hasGrade ? (
-                            <span style={{ fontSize: '1.25rem', fontWeight: 'bold', color: hw.not_degeri >= 50 ? 'var(--success)' : 'var(--danger)' }}>
-                              {hw.not_degeri} / 100
-                            </span>
-                          ) : (
-                            <span style={{ color: 'var(--text-muted)' }}>-</span>
-                          )}
-                        </td>
-                        <td style={{ fontStyle: 'italic', color: 'var(--text-dark)' }}>
-                          {hw.ogretmen_notu ? `"${hw.ogretmen_notu}"` : '-'}
-                        </td>
+
+            {loading ? (
+              <p>Yükleniyor...</p>
+            ) : (
+              <div className="table-container" style={{ marginBottom: '2rem' }}>
+                <table className="glass-table">
+                  <thead>
+                    <tr>
+                      <th>Ders & Başlık</th>
+                      <th>Öğretmen</th>
+                      <th>Durum</th>
+                      <th>Alınan Not</th>
+                      <th>Öğretmen Yorumu</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {homeworks.length === 0 ? (
+                      <tr>
+                        <td colSpan="5" style={{ textAlign: 'center', padding: '2rem' }}>Sistemde kayıtlı ödev bulunamadı.</td>
                       </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
+                    ) : (
+                      homeworks.map(hw => {
+                        const isSubmitted = hw.teslim_id != null;
+                        const hasGrade = hw.not_degeri !== null && hw.not_degeri !== undefined;
+
+                        return (
+                          <tr key={hw.id} className={isSubmitted ? 'row-success' : 'row-danger'}>
+                            <td>
+                              <div style={{ fontWeight: '600' }}>{hw.ders_adi}</div>
+                              <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{hw.baslik}</div>
+                            </td>
+                            <td>{hw.ogretmen_adi}</td>
+                            <td>
+                              <span className={`status-badge ${isSubmitted ? 'success' : 'danger'}`}>
+                                {isSubmitted ? 'Teslim Edildi' : 'Bekliyor / Yapılmadı'}
+                              </span>
+                            </td>
+                            <td>
+                              {hasGrade ? (
+                                <span style={{ fontSize: '1.25rem', fontWeight: 'bold', color: hw.not_degeri >= 50 ? 'var(--success)' : 'var(--danger)' }}>
+                                  {hw.not_degeri} / 100
+                                </span>
+                              ) : (
+                                <span style={{ color: 'var(--text-muted)' }}>-</span>
+                              )}
+                            </td>
+                            <td style={{ fontStyle: 'italic', color: 'var(--text-dark)' }}>
+                              {hw.ogretmen_notu ? `"${hw.ogretmen_notu}"` : '-'}
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
-          )}
-        </div>
         )}
 
         {activeTab === 'attendance' && (
           <div className="animate-fade-in">
             <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <CalendarX2 size={20} color="var(--danger)"/> Devamsızlık Takibi
+              <CalendarX2 size={20} color="var(--danger)" /> Devamsızlık Takibi
             </h3>
             <table className="glass-table">
               <thead><tr><th>Tarih</th><th>Durum</th></tr></thead>
               <tbody>
-                {attendance.length === 0 ? <tr><td colSpan="2" style={{ textAlign:'center' }}>Devamsızlık kaydı bulunmuyor.</td></tr> : 
+                {attendance.length === 0 ? <tr><td colSpan="2" style={{ textAlign: 'center' }}>Devamsızlık kaydı bulunmuyor.</td></tr> :
                   attendance.map(a => (
                     <tr key={a.id}>
                       <td>{new Date(a.tarih).toLocaleDateString('tr-TR')}</td>
@@ -168,11 +168,11 @@ const ParentPanel = () => {
 
       <div className="glass-panel animate-fade-in">
         <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <MessageSquare size={20} color="var(--warning)"/>
+          <MessageSquare size={20} color="var(--warning)" />
           Öğretmene Ulaşın (Geri Bildirim / Şikayet)
         </h3>
         {feedbackSuccess && <div style={{ background: 'rgba(16, 185, 129, 0.1)', color: 'var(--success)', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle2 size={20} /> {feedbackSuccess}</div>}
-        
+
         <form onSubmit={handleFeedbackSubmit}>
           <div className="form-group">
             <textarea className="input-field" rows="3" placeholder="Mesajınızı buraya yazın..." value={feedback} onChange={e => setFeedback(e.target.value)} required style={{ resize: 'vertical' }}></textarea>

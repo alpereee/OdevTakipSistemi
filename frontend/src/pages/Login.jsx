@@ -7,7 +7,7 @@ const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  
+
   // Forgot Password States
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [resetUsername, setResetUsername] = useState('');
@@ -19,9 +19,9 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
-    
+
     try {
-      const response = await axios.post('https://odevtakipsistemi.onrender.com/api/auth/login', {
+      const response = await axios.post('https://odevtakipsistemi.onrender.com/api/api/auth/login', {
         username,
         password
       });
@@ -35,7 +35,7 @@ const Login = () => {
       else if (role === 2) navigate('/teacher');
       else if (role === 3) navigate('/student');
       else if (role === 4) navigate('/parent');
-      
+
     } catch (err) {
       setError(err.response?.data?.message || 'Giriş başarısız. Lütfen bilgilerinizi kontrol edin.');
     }
@@ -45,7 +45,7 @@ const Login = () => {
     e.preventDefault();
     setResetMsg('');
     try {
-      const res = await axios.post('https://odevtakipsistemi.onrender.com/api/auth/reset-password', {
+      const res = await axios.post('https://odevtakipsistemi.onrender.com/api/api/auth/reset-password', {
         username: resetUsername,
         newPassword
       });
@@ -63,8 +63,8 @@ const Login = () => {
     <div className="login-container">
       <div className="login-card animate-fade-in">
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <div style={{ 
-            width: '64px', height: '64px', borderRadius: '50%', 
+          <div style={{
+            width: '64px', height: '64px', borderRadius: '50%',
             background: 'var(--primary-color)', margin: '0 auto 1rem',
             display: 'flex', alignItems: 'center', justifyContent: 'center'
           }}>
@@ -80,9 +80,9 @@ const Login = () => {
           <form onSubmit={handleLogin}>
             <div className="form-group">
               <label>Kullanıcı Adı</label>
-              <input 
-                type="text" 
-                className="input-field" 
+              <input
+                type="text"
+                className="input-field"
                 placeholder="Örn: ogrenci_ayse"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
@@ -92,9 +92,9 @@ const Login = () => {
 
             <div className="form-group">
               <label>Şifre</label>
-              <input 
-                type="password" 
-                className="input-field" 
+              <input
+                type="password"
+                className="input-field"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -107,8 +107,8 @@ const Login = () => {
             </button>
 
             <div style={{ textAlign: 'center', marginTop: '1rem' }}>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 style={{ background: 'none', border: 'none', color: 'var(--primary-color)', cursor: 'pointer', textDecoration: 'underline' }}
                 onClick={() => setIsForgotPassword(true)}
               >
@@ -122,12 +122,12 @@ const Login = () => {
               <KeyRound size={20} /> Şifre Sıfırlama
             </h3>
             {resetMsg && <div style={{ marginBottom: '1rem', color: resetMsg.includes('başarıyla') ? 'var(--success)' : 'var(--danger)' }}>{resetMsg}</div>}
-            
+
             <div className="form-group">
               <label>Kullanıcı Adı</label>
-              <input 
-                type="text" 
-                className="input-field" 
+              <input
+                type="text"
+                className="input-field"
                 value={resetUsername}
                 onChange={(e) => setResetUsername(e.target.value)}
                 required
@@ -135,21 +135,21 @@ const Login = () => {
             </div>
             <div className="form-group">
               <label>Yeni Şifre</label>
-              <input 
-                type="password" 
-                className="input-field" 
+              <input
+                type="password"
+                className="input-field"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 required
               />
             </div>
-            
+
             <button type="submit" className="btn-primary" style={{ marginTop: '1rem' }}>
               Şifreyi Güncelle
             </button>
             <div style={{ textAlign: 'center', marginTop: '1rem' }}>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', textDecoration: 'underline' }}
                 onClick={() => setIsForgotPassword(false)}
               >

@@ -6,7 +6,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGri
 
 const TeacherPanel = () => {
   const [activeTab, setActiveTab] = useState('homeworks'); // homeworks, analytics, messages
-  
+
   const [warning, setWarning] = useState('');
   const [totalLoad, setTotalLoad] = useState(0);
   const [homeworks, setHomeworks] = useState([]);
@@ -38,42 +38,42 @@ const TeacherPanel = () => {
 
   const fetchHomeworks = async () => {
     try {
-      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/homeworks/class/1', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/api/homeworks/class/1', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       setHomeworks(res.data);
-    } catch (e) {}
+    } catch (e) { }
   };
 
   const fetchUsers = async () => {
     try {
-      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/users', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/api/users', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       setUsers(res.data);
-    } catch (e) {}
+    } catch (e) { }
   };
 
   const fetchMessages = async () => {
     try {
-      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/messages', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/api/messages', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       setMessages(res.data);
-    } catch (e) {}
+    } catch (e) { }
   };
 
   const checkHomeworkLoad = async () => {
     try {
-      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/analytics/homework-load?sinif_id=1', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/api/analytics/homework-load?sinif_id=1', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       setTotalLoad(res.data.toplam_sure_dakika);
       setWarning(res.data.warning || '');
-    } catch (e) {}
+    } catch (e) { }
   };
 
   const fetchSubmissions = async (id) => {
     try {
-      const res = await axios.get(`https://odevtakipsistemi.onrender.com/api/homeworks/${id}/submissions`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      const res = await axios.get(`https://odevtakipsistemi.onrender.com/api/api/homeworks/${id}/submissions`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       setSubmissions(res.data);
       setActiveHomework(id);
       const initGrades = {};
       res.data.forEach(s => initGrades[s.id] = { not_degeri: s.not_degeri || '', ogretmen_notu: s.ogretmen_notu || '' });
       setGradeData(initGrades);
-    } catch (e) {}
+    } catch (e) { }
   };
 
   const handleLogout = () => { localStorage.removeItem('token'); navigate('/login'); };
@@ -87,14 +87,14 @@ const TeacherPanel = () => {
     if (dosya) fd.append('dosya', dosya);
 
     try {
-      await axios.post('https://odevtakipsistemi.onrender.com/api/homeworks', fd, { headers: { Authorization: `Bearer ${token}` } });
+      await axios.post('https://odevtakipsistemi.onrender.com/api/api/homeworks', fd, { headers: { Authorization: `Bearer ${token}` } });
       alert('Ödev eklendi'); setShowForm(false); fetchHomeworks(); checkHomeworkLoad();
     } catch (e) { alert('Hata'); }
   };
 
   const handleGradeSubmit = async (id) => {
     try {
-      await axios.put(`https://odevtakipsistemi.onrender.com/api/homeworks/submissions/${id}/grade`, { not_degeri: gradeData[id].not_degeri, ogretmen_notu: gradeData[id].ogretmen_notu }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      await axios.put(`https://odevtakipsistemi.onrender.com/api/api/homeworks/submissions/${id}/grade`, { not_degeri: gradeData[id].not_degeri, ogretmen_notu: gradeData[id].ogretmen_notu }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       alert('Not kaydedildi.');
     } catch (e) { alert('Hata'); }
   };
@@ -102,7 +102,7 @@ const TeacherPanel = () => {
   const handleSendMessage = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('https://odevtakipsistemi.onrender.com/api/messages/send', { alici_id: msgTo, mesaj: msgText }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      await axios.post('https://odevtakipsistemi.onrender.com/api/api/messages/send', { alici_id: msgTo, mesaj: msgText }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       alert('Mesaj gönderildi'); setMsgText('');
     } catch (e) { alert('Hata'); }
   };
@@ -116,7 +116,7 @@ const TeacherPanel = () => {
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem' }}>
       {warning && (
-        <div className="warning-banner animate-fade-in"><AlertTriangle size={24}/> DİKKAT: Yüksek Ödev Yükü ({totalLoad} dk)</div>
+        <div className="warning-banner animate-fade-in"><AlertTriangle size={24} /> DİKKAT: Yüksek Ödev Yükü ({totalLoad} dk)</div>
       )}
 
       <div className="glass-panel animate-fade-in" style={{ marginBottom: '2rem' }}>
@@ -134,19 +134,19 @@ const TeacherPanel = () => {
         {activeTab === 'homeworks' && (
           <div className="animate-fade-in">
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-              <h3><GraduationCap size={20} style={{ verticalAlign: 'middle' }}/> Verilen Ödevler</h3>
-              <button className="btn-primary" style={{ width:'auto' }} onClick={() => setShowForm(!showForm)}>Yeni Ödev Ata</button>
+              <h3><GraduationCap size={20} style={{ verticalAlign: 'middle' }} /> Verilen Ödevler</h3>
+              <button className="btn-primary" style={{ width: 'auto' }} onClick={() => setShowForm(!showForm)}>Yeni Ödev Ata</button>
             </div>
 
             {showForm && (
               <form onSubmit={handleHomeworkSubmit} style={{ background: 'rgba(255,255,255,0.4)', padding: '1rem', borderRadius: '8px', marginBottom: '1rem' }}>
-                <input type="text" className="input-field" placeholder="Başlık" value={baslik} onChange={e=>setBaslik(e.target.value)} required />
-                <textarea className="input-field" placeholder="Açıklama" value={aciklama} onChange={e=>setAciklama(e.target.value)} required />
+                <input type="text" className="input-field" placeholder="Başlık" value={baslik} onChange={e => setBaslik(e.target.value)} required />
+                <textarea className="input-field" placeholder="Açıklama" value={aciklama} onChange={e => setAciklama(e.target.value)} required />
                 <div style={{ display: 'flex', gap: '1rem' }}>
-                  <input type="number" className="input-field" placeholder="Süre (Dk)" value={sureDakika} onChange={e=>setSureDakika(e.target.value)} required />
-                  <input type="date" className="input-field" value={teslimTarihi} onChange={e=>setTeslimTarihi(e.target.value)} required />
+                  <input type="number" className="input-field" placeholder="Süre (Dk)" value={sureDakika} onChange={e => setSureDakika(e.target.value)} required />
+                  <input type="date" className="input-field" value={teslimTarihi} onChange={e => setTeslimTarihi(e.target.value)} required />
                 </div>
-                <input type="file" onChange={e=>setDosya(e.target.files[0])} style={{ margin: '1rem 0' }} />
+                <input type="file" onChange={e => setDosya(e.target.files[0])} style={{ margin: '1rem 0' }} />
                 <button type="submit" className="btn-primary" style={{ width: 'auto' }}>Gönder</button>
               </form>
             )}
@@ -157,7 +157,7 @@ const TeacherPanel = () => {
                 {homeworks.map(h => (
                   <tr key={h.id}>
                     <td>{h.baslik}</td><td>{h.sure_dakika} dk</td><td>{h.teslim_tarihi}</td>
-                    <td><button className="btn-primary" style={{ width:'auto', padding:'0.4rem 1rem' }} onClick={() => fetchSubmissions(h.id)}>Teslimler</button></td>
+                    <td><button className="btn-primary" style={{ width: 'auto', padding: '0.4rem 1rem' }} onClick={() => fetchSubmissions(h.id)}>Teslimler</button></td>
                   </tr>
                 ))}
               </tbody>
@@ -173,9 +173,9 @@ const TeacherPanel = () => {
                       {submissions.map(s => (
                         <tr key={s.id}>
                           <td>{s.ogrenci_adi}</td>
-                          <td><input type="number" className="input-field" value={gradeData[s.id]?.not_degeri} onChange={e=>setGradeData({...gradeData, [s.id]: {...gradeData[s.id], not_degeri: e.target.value}})} style={{ width:'80px' }}/></td>
-                          <td><input type="text" className="input-field" value={gradeData[s.id]?.ogretmen_notu} onChange={e=>setGradeData({...gradeData, [s.id]: {...gradeData[s.id], ogretmen_notu: e.target.value}})} /></td>
-                          <td><button className="btn-primary" style={{ width:'auto' }} onClick={()=>handleGradeSubmit(s.id)}>Ver</button></td>
+                          <td><input type="number" className="input-field" value={gradeData[s.id]?.not_degeri} onChange={e => setGradeData({ ...gradeData, [s.id]: { ...gradeData[s.id], not_degeri: e.target.value } })} style={{ width: '80px' }} /></td>
+                          <td><input type="text" className="input-field" value={gradeData[s.id]?.ogretmen_notu} onChange={e => setGradeData({ ...gradeData, [s.id]: { ...gradeData[s.id], ogretmen_notu: e.target.value } })} /></td>
+                          <td><button className="btn-primary" style={{ width: 'auto' }} onClick={() => handleGradeSubmit(s.id)}>Ver</button></td>
                         </tr>
                       ))}
                     </tbody>
@@ -188,7 +188,7 @@ const TeacherPanel = () => {
 
         {activeTab === 'analytics' && (
           <div className="animate-fade-in">
-            <h3><BarChart3 size={20} style={{ verticalAlign: 'middle' }}/> Haftalık Ödev Yükü (Dakika)</h3>
+            <h3><BarChart3 size={20} style={{ verticalAlign: 'middle' }} /> Haftalık Ödev Yükü (Dakika)</h3>
             <div style={{ height: '300px', background: 'rgba(255,255,255,0.5)', padding: '1rem', borderRadius: '12px', marginBottom: '2rem' }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData}>
@@ -201,7 +201,7 @@ const TeacherPanel = () => {
               </ResponsiveContainer>
             </div>
 
-            <h3><CalendarDays size={20} style={{ verticalAlign: 'middle' }}/> Basit Ödev Takvimi</h3>
+            <h3><CalendarDays size={20} style={{ verticalAlign: 'middle' }} /> Basit Ödev Takvimi</h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.5rem' }}>
               {['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'].map(d => <div key={d} style={{ textAlign: 'center', fontWeight: 'bold' }}>{d}</div>)}
               {Array.from({ length: 14 }).map((_, i) => (
@@ -215,14 +215,14 @@ const TeacherPanel = () => {
 
         {activeTab === 'messages' && (
           <div className="animate-fade-in">
-            <h3><MessageCircle size={20} style={{ verticalAlign: 'middle' }}/> Mesajlaşma</h3>
+            <h3><MessageCircle size={20} style={{ verticalAlign: 'middle' }} /> Mesajlaşma</h3>
             <form onSubmit={handleSendMessage} style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
-              <select className="input-field" value={msgTo} onChange={e=>setMsgTo(e.target.value)} required>
+              <select className="input-field" value={msgTo} onChange={e => setMsgTo(e.target.value)} required>
                 <option value="">Kime...</option>
                 {users.map(u => <option key={u.id} value={u.id}>{u.username} ({u.role_name})</option>)}
               </select>
-              <input type="text" className="input-field" placeholder="Mesajınız..." value={msgText} onChange={e=>setMsgText(e.target.value)} required />
-              <button type="submit" className="btn-primary" style={{ width: 'auto' }}><Send size={18}/></button>
+              <input type="text" className="input-field" placeholder="Mesajınız..." value={msgText} onChange={e => setMsgText(e.target.value)} required />
+              <button type="submit" className="btn-primary" style={{ width: 'auto' }}><Send size={18} /></button>
             </form>
 
             <h4>Gelen Mesajlar</h4>

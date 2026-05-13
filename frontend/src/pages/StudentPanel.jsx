@@ -24,36 +24,36 @@ const StudentPanel = () => {
 
   const fetchHomeworks = async () => {
     try {
-      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/homeworks/class/1', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/api/homeworks/class/1', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       setHomeworks(res.data);
-    } catch (error) {}
+    } catch (error) { }
   };
 
   const fetchAnnouncements = async () => {
     try {
-      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/announcements', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/api/announcements', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       setAnnouncements(res.data);
-    } catch (error) {}
+    } catch (error) { }
   };
 
   const fetchUsers = async () => {
     try {
-      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/users', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/api/users', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       setUsers(res.data);
-    } catch (e) {}
+    } catch (e) { }
   };
 
   const fetchMessages = async () => {
     try {
-      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/messages', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/api/messages', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       setMessages(res.data);
-    } catch (e) {}
+    } catch (e) { }
   };
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('https://odevtakipsistemi.onrender.com/api/messages/send', { alici_id: msgTo, mesaj: msgText }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      await axios.post('https://odevtakipsistemi.onrender.com/api/api/messages/send', { alici_id: msgTo, mesaj: msgText }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       alert('Mesaj gönderildi'); setMsgText('');
     } catch (e) { alert('Hata'); }
   };
@@ -85,7 +85,7 @@ const StudentPanel = () => {
 
         {activeTab === 'homeworks' && (
           <div className="animate-fade-in">
-            <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1rem' }}><BookOpen size={20} color="var(--primary-color)"/> Ödev Listesi (Sınıf 1)</h3>
+            <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1rem' }}><BookOpen size={20} color="var(--primary-color)" /> Ödev Listesi (Sınıf 1)</h3>
             <div className="table-container">
               <table className="glass-table">
                 <thead><tr><th>Ders</th><th>Başlık</th><th>Öğretmen</th><th>Süre</th><th>Teslim</th><th>Durum</th></tr></thead>
@@ -93,7 +93,7 @@ const StudentPanel = () => {
                   {homeworks.map(hw => (
                     <tr key={hw.id} className={hw.durum === 'gonderildi' ? 'row-success' : 'row-danger'}>
                       <td>{hw.ders_adi}</td><td>{hw.baslik}</td><td>{hw.ogretmen_adi}</td>
-                      <td><Clock size={14} style={{ verticalAlign: 'middle' }}/> {hw.sure_dakika} dk</td>
+                      <td><Clock size={14} style={{ verticalAlign: 'middle' }} /> {hw.sure_dakika} dk</td>
                       <td>{hw.teslim_tarihi}</td>
                       <td><span className={`status-badge ${hw.durum === 'gonderildi' ? 'success' : 'danger'}`}>{hw.durum === 'gonderildi' ? 'Gönderildi' : 'Bekliyor'}</span></td>
                     </tr>
@@ -106,14 +106,14 @@ const StudentPanel = () => {
 
         {activeTab === 'messages' && (
           <div className="animate-fade-in">
-            <h3><MessageCircle size={20} style={{ verticalAlign: 'middle' }}/> Mesajlaşma</h3>
+            <h3><MessageCircle size={20} style={{ verticalAlign: 'middle' }} /> Mesajlaşma</h3>
             <form onSubmit={handleSendMessage} style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
-              <select className="input-field" value={msgTo} onChange={e=>setMsgTo(e.target.value)} required>
+              <select className="input-field" value={msgTo} onChange={e => setMsgTo(e.target.value)} required>
                 <option value="">Kime...</option>
                 {users.map(u => <option key={u.id} value={u.id}>{u.username} ({u.role_name})</option>)}
               </select>
-              <input type="text" className="input-field" placeholder="Mesajınız..." value={msgText} onChange={e=>setMsgText(e.target.value)} required />
-              <button type="submit" className="btn-primary" style={{ width: 'auto' }}><Send size={18}/></button>
+              <input type="text" className="input-field" placeholder="Mesajınız..." value={msgText} onChange={e => setMsgText(e.target.value)} required />
+              <button type="submit" className="btn-primary" style={{ width: 'auto' }}><Send size={18} /></button>
             </form>
 
             <h4>Gelen Mesajlar</h4>

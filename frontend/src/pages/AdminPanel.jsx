@@ -28,21 +28,21 @@ const AdminPanel = () => {
 
   const fetchUsers = async () => {
     try {
-      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/users', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/api/users', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       setUsers(res.data);
     } catch (e) { console.error(e); }
   };
 
   const fetchAnnouncements = async () => {
     try {
-      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/announcements', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/api/announcements', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       setAnnouncements(res.data);
     } catch (e) { console.error(e); }
   };
 
   const fetchSchools = async () => {
     try {
-      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/schools', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/api/schools', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       setSchools(res.data);
     } catch (e) { console.error(e); }
   };
@@ -55,16 +55,16 @@ const AdminPanel = () => {
   const handleAddUser = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('https://odevtakipsistemi.onrender.com/api/users', { username, password, role_id: parseInt(roleId) }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      await axios.post('https://odevtakipsistemi.onrender.com/api/api/users', { username, password, role_id: parseInt(roleId) }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       alert('Kullanıcı eklendi');
       fetchUsers();
     } catch (e) { alert('Hata'); }
   };
 
   const handleDeleteUser = async (id) => {
-    if(!window.confirm('Emin misiniz?')) return;
+    if (!window.confirm('Emin misiniz?')) return;
     try {
-      await axios.delete(`https://odevtakipsistemi.onrender.com/api/users/${id}`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      await axios.delete(`https://odevtakipsistemi.onrender.com/api/api/users/${id}`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       fetchUsers();
     } catch (e) { alert('Hata'); }
   };
@@ -72,7 +72,7 @@ const AdminPanel = () => {
   const handleAddLesson = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('https://odevtakipsistemi.onrender.com/api/lessons', { ad: lessonName }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      await axios.post('https://odevtakipsistemi.onrender.com/api/api/lessons', { ad: lessonName }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       alert('Ders eklendi');
       setLessonName('');
     } catch (e) { alert('Hata'); }
@@ -81,7 +81,7 @@ const AdminPanel = () => {
   const handleAddSchool = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('https://odevtakipsistemi.onrender.com/api/schools', { ad: schoolName, adres: schoolAddress }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      await axios.post('https://odevtakipsistemi.onrender.com/api/api/schools', { ad: schoolName, adres: schoolAddress }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       alert('Okul eklendi');
       setSchoolName(''); setSchoolAddress('');
       fetchSchools();
@@ -91,7 +91,7 @@ const AdminPanel = () => {
   const handleAddAnnouncement = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('https://odevtakipsistemi.onrender.com/api/announcements', { baslik: annTitle, icerik: annContent }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      await axios.post('https://odevtakipsistemi.onrender.com/api/api/announcements', { baslik: annTitle, icerik: annContent }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       alert('Duyuru yayınlandı');
       setAnnTitle(''); setAnnContent('');
       fetchAnnouncements();
@@ -100,7 +100,7 @@ const AdminPanel = () => {
 
   const handleDeleteAnnouncement = async (id) => {
     try {
-      await axios.delete(`https://odevtakipsistemi.onrender.com/api/announcements/${id}`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      await axios.delete(`https://odevtakipsistemi.onrender.com/api/api/announcements/${id}`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       fetchAnnouncements();
     } catch (e) { alert('Hata'); }
   };
@@ -127,7 +127,7 @@ const AdminPanel = () => {
 
         {activeTab === 'users' && (
           <div className="animate-fade-in">
-            <h3><Users size={20} style={{ verticalAlign: 'middle' }}/> Kullanıcı Ekle</h3>
+            <h3><Users size={20} style={{ verticalAlign: 'middle' }} /> Kullanıcı Ekle</h3>
             <form onSubmit={handleAddUser} style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '2rem' }}>
               <input type="text" placeholder="Kullanıcı Adı" className="input-field" value={username} onChange={e => setUsername(e.target.value)} required />
               <input type="password" placeholder="Şifre" className="input-field" value={password} onChange={e => setPassword(e.target.value)} required />
@@ -144,7 +144,7 @@ const AdminPanel = () => {
                 {users.map(u => (
                   <tr key={u.id}>
                     <td>{u.id}</td><td>{u.username}</td><td>{u.role_name}</td>
-                    <td><button onClick={() => handleDeleteUser(u.id)} style={{ color: 'var(--danger)', background:'none', border:'none', cursor:'pointer' }}><Trash2 size={18}/></button></td>
+                    <td><button onClick={() => handleDeleteUser(u.id)} style={{ color: 'var(--danger)', background: 'none', border: 'none', cursor: 'pointer' }}><Trash2 size={18} /></button></td>
                   </tr>
                 ))}
               </tbody>
@@ -154,7 +154,7 @@ const AdminPanel = () => {
 
         {activeTab === 'schools' && (
           <div className="animate-fade-in">
-            <h3><Building2 size={20} style={{ verticalAlign: 'middle' }}/> Kurum / Okul Tanımla</h3>
+            <h3><Building2 size={20} style={{ verticalAlign: 'middle' }} /> Kurum / Okul Tanımla</h3>
             <form onSubmit={handleAddSchool} style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
               <input type="text" placeholder="Okul Adı" className="input-field" value={schoolName} onChange={e => setSchoolName(e.target.value)} required />
               <input type="text" placeholder="Adres (Opsiyonel)" className="input-field" value={schoolAddress} onChange={e => setSchoolAddress(e.target.value)} />
@@ -176,7 +176,7 @@ const AdminPanel = () => {
 
         {activeTab === 'lessons' && (
           <div className="animate-fade-in">
-            <h3><BookOpen size={20} style={{ verticalAlign: 'middle' }}/> Ders / Bölüm Tanımla</h3>
+            <h3><BookOpen size={20} style={{ verticalAlign: 'middle' }} /> Ders / Bölüm Tanımla</h3>
             <form onSubmit={handleAddLesson} style={{ display: 'flex', gap: '1rem' }}>
               <input type="text" placeholder="Ders Adı" className="input-field" value={lessonName} onChange={e => setLessonName(e.target.value)} required />
               <button type="submit" className="btn-primary" style={{ width: 'auto' }}>Kaydet</button>
@@ -186,7 +186,7 @@ const AdminPanel = () => {
 
         {activeTab === 'announcements' && (
           <div className="animate-fade-in">
-            <h3><Megaphone size={20} style={{ verticalAlign: 'middle' }}/> Genel Duyuru Yayınla</h3>
+            <h3><Megaphone size={20} style={{ verticalAlign: 'middle' }} /> Genel Duyuru Yayınla</h3>
             <form onSubmit={handleAddAnnouncement} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem' }}>
               <input type="text" placeholder="Duyuru Başlığı" className="input-field" value={annTitle} onChange={e => setAnnTitle(e.target.value)} required />
               <textarea placeholder="Duyuru İçeriği..." className="input-field" rows="3" value={annContent} onChange={e => setAnnContent(e.target.value)} required></textarea>
@@ -196,7 +196,7 @@ const AdminPanel = () => {
             <h4>Mevcut Duyurular</h4>
             {announcements.map(a => (
               <div key={a.id} style={{ padding: '1rem', background: 'rgba(255,255,255,0.5)', borderRadius: '8px', marginBottom: '1rem', position: 'relative' }}>
-                <button onClick={() => handleDeleteAnnouncement(a.id)} style={{ position: 'absolute', right: '1rem', top: '1rem', color: 'var(--danger)', background:'none', border:'none', cursor:'pointer' }}><Trash2 size={18}/></button>
+                <button onClick={() => handleDeleteAnnouncement(a.id)} style={{ position: 'absolute', right: '1rem', top: '1rem', color: 'var(--danger)', background: 'none', border: 'none', cursor: 'pointer' }}><Trash2 size={18} /></button>
                 <h5>{a.baslik}</h5>
                 <p>{a.icerik}</p>
                 <small style={{ color: 'var(--text-muted)' }}>{new Date(a.tarih).toLocaleString('tr-TR')} - Yazan: {a.yayinlayan_adi}</small>
