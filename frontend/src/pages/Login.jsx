@@ -21,7 +21,7 @@ const Login = () => {
     setError('');
 
     try {
-      const response = await axios.post('https://odevtakipsistemi.onrender.com/api/auth/login', {
+      const response = await axios.post('https://odevtakipsistemi.onrender.com/api/login', {
         username,
         password
       });
