@@ -28,6 +28,18 @@ app.use('/api/messages', require('./routes/messageRoutes'));
 app.use('/api/schools', require('./routes/schoolRoutes'));
 app.use('/api/attendance', require('./routes/attendanceRoutes'));
 
+// GEÇİCİ SEED ROTASI (Canlı sunucuda test verisi oluşturmak için)
+app.get('/api/run-seed', async (req, res) => {
+    try {
+        const runSeed = require('./config/seed');
+        await runSeed();
+        res.json({ message: 'Veritabanı başarıyla tohumlandı!' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Tohumlama hatası', details: error.message });
+    }
+});
+
 // Ana Dizin (Basit bir karşılama)
 app.get('/', (req, res) => {
     res.json({ message: 'Ödev Takip Sistemi API iskeleti çalışıyor.' });
