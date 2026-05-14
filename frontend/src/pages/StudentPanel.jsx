@@ -25,9 +25,11 @@ const StudentPanel = () => {
 
   const fetchHomeworks = async () => {
     try {
-      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/homeworks/class/1', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
-      setHomeworks(res.data);
-    } catch (error) { }
+      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/homeworks/student/3', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      setHomeworks(Array.isArray(res.data) ? res.data : (res.data?.data || []));
+    } catch (error) {
+      setHomeworks([]);
+    }
   };
 
   const fetchAnnouncements = async () => {
@@ -40,15 +42,19 @@ const StudentPanel = () => {
   const fetchUsers = async () => {
     try {
       const res = await axios.get('https://odevtakipsistemi.onrender.com/api/users/recipients', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
-      setUsers(res.data);
-    } catch (e) { }
+      setUsers(Array.isArray(res.data) ? res.data : (res.data?.data || []));
+    } catch (e) {
+      setUsers([]);
+    }
   };
 
   const fetchMessages = async () => {
     try {
       const res = await axios.get('https://odevtakipsistemi.onrender.com/api/messages', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
-      setMessages(res.data);
-    } catch (e) { }
+      setMessages(Array.isArray(res.data) ? res.data : (res.data?.data || []));
+    } catch (e) {
+      setMessages([]);
+    }
   };
 
   const handleSendMessage = async (e) => {

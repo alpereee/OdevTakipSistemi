@@ -43,22 +43,28 @@ const TeacherPanel = () => {
   const fetchHomeworks = async () => {
     try {
       const res = await axios.get('https://odevtakipsistemi.onrender.com/api/homeworks/class/1', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
-      setHomeworks(res.data);
-    } catch (e) { }
+      setHomeworks(Array.isArray(res.data) ? res.data : (res.data?.data || []));
+    } catch (e) {
+      setHomeworks([]);
+    }
   };
 
   const fetchUsers = async () => {
     try {
       const res = await axios.get('https://odevtakipsistemi.onrender.com/api/users/recipients', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
-      setUsers(res.data);
-    } catch (e) { }
+      setUsers(Array.isArray(res.data) ? res.data : (res.data?.data || []));
+    } catch (e) {
+      setUsers([]);
+    }
   };
 
   const fetchMessages = async () => {
     try {
       const res = await axios.get('https://odevtakipsistemi.onrender.com/api/messages', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
-      setMessages(res.data);
-    } catch (e) { }
+      setMessages(Array.isArray(res.data) ? res.data : (res.data?.data || []));
+    } catch (e) {
+      setMessages([]);
+    }
   };
 
   const checkHomeworkLoad = async () => {
@@ -72,12 +78,15 @@ const TeacherPanel = () => {
   const fetchSubmissions = async (id) => {
     try {
       const res = await axios.get(`https://odevtakipsistemi.onrender.com/api/homeworks/${id}/submissions`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
-      setSubmissions(res.data);
+      const data = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+      setSubmissions(data);
       setActiveHomework(id);
       const initGrades = {};
-      res.data.forEach(s => initGrades[s.id] = { not_degeri: s.not_degeri || '', ogretmen_notu: s.ogretmen_notu || '' });
+      data.forEach(s => initGrades[s.id] = { not_degeri: s.not_degeri || '', ogretmen_notu: s.ogretmen_notu || '' });
       setGradeData(initGrades);
-    } catch (e) { }
+    } catch (e) {
+      setSubmissions([]);
+    }
   };
 
   const handleLogout = () => { localStorage.removeItem('token'); navigate('/login'); };

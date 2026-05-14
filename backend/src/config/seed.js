@@ -1,9 +1,8 @@
 const path = require('path');
 const bcrypt = require('bcryptjs');
-const fs = require('fs');
-const db = require('./database'); // Use the existing connection
+const db = require('./database'); // Use existing connection
 
-const runSeed = () => {
+const runSeed = async () => {
     return new Promise((resolve, reject) => {
         const schema = `
             DROP TABLE IF EXISTS devamsizliklar;
@@ -29,22 +28,30 @@ const runSeed = () => {
             CREATE TABLE devamsizliklar (id INTEGER PRIMARY KEY AUTOINCREMENT, ogrenci_id INTEGER NOT NULL, tarih DATE NOT NULL, durum TEXT NOT NULL CHECK(durum IN ('Tam Gün', 'Yarım Gün', 'Raporlu', 'İzinli')), FOREIGN KEY (ogrenci_id) REFERENCES users (id));
         `;
 
-        db.exec(schema, (err) => {
-            if (err) return reject(err);
+        db.exec(schema, async (err) => {
+            if (err) return reject(new Error('Tablolar oluşturulurken hata: ' + err.message));
 
-            db.serialize(() => {
-                // Rolleri Ekle
+            try {
+                // Promisify run to avoid silent failures
+                const runQuery = (sql, params = []) => new Promise((res, rej) => {
+                    db.run(sql, params, function(e) {
+                        if (e) rej(e);
+                        else res(this);
+                    });
+                });
+
+                // 1. Roles
                 const roles = [
                     { id: 1, name: 'Yönetici' },
                     { id: 2, name: 'Öğretmen' },
                     { id: 3, name: 'Öğrenci' },
                     { id: 4, name: 'Veli' }
                 ];
-                const insertRole = db.prepare(`INSERT INTO roles (id, name) VALUES (?, ?)`);
-                roles.forEach(role => insertRole.run(role.id, role.name));
-                insertRole.finalize();
+                for (let r of roles) {
+                    await runQuery(`INSERT INTO roles (id, name) VALUES (?, ?)`, [r.id, r.name]);
+                }
 
-                // Okulları Ekle
+                // 2. Schools
                 const schools = [
                     { ad: 'Atatürk İlkokulu', adres: 'Ankara Merkez' },
                     { ad: 'Cumhuriyet Ortaokulu', adres: 'İstanbul Şişli' },
@@ -52,77 +59,74 @@ const runSeed = () => {
                     { ad: 'Bilim Koleji', adres: 'Antalya Muratpaşa' },
                     { ad: 'Sanat Lisesi', adres: 'Bursa Osmangazi' }
                 ];
-                const insertSchool = db.prepare(`INSERT INTO okullar (ad, adres) VALUES (?, ?)`);
-                schools.forEach(school => insertSchool.run(school.ad, school.adres));
-                insertSchool.finalize();
+                for (let s of schools) {
+                    await runQuery(`INSERT INTO okullar (ad, adres) VALUES (?, ?)`, [s.ad, s.adres]);
+                }
 
-                // Dersleri Ekle
+                // 3. Dersler
                 const dersler = ['Matematik', 'Türkçe', 'Fen Bilimleri', 'Sosyal Bilgiler', 'İngilizce'];
-                const insertDers = db.prepare(`INSERT INTO dersler (ad) VALUES (?)`);
-                dersler.forEach(ders => insertDers.run(ders));
-                insertDers.finalize();
+                for (let d of dersler) {
+                    await runQuery(`INSERT INTO dersler (ad) VALUES (?)`, [d]);
+                }
 
-                // Kullanıcıları Ekle (Admin, 5 Öğretmen, 5 Öğrenci, 5 Veli)
+                // 4. Users
                 const salt = bcrypt.genSaltSync(10);
                 const hash = bcrypt.hashSync('123', salt);
-                const insertUser = db.prepare(`INSERT INTO users (username, password_hash, role_id) VALUES (?, ?, ?)`);
                 
-                insertUser.run('admin', hash, 1);
-                for(let i=1; i<=5; i++) insertUser.run(`ogretmen${i}`, hash, 2);
-                for(let i=1; i<=5; i++) insertUser.run(`ogrenci${i}`, hash, 3);
-                for(let i=1; i<=5; i++) insertUser.run(`veli${i}`, hash, 4);
-                insertUser.finalize();
+                await runQuery(`INSERT INTO users (id, username, password_hash, role_id) VALUES (?, ?, ?, ?)`, [1, 'admin', hash, 1]);
+                for(let i=1; i<=5; i++) await runQuery(`INSERT INTO users (username, password_hash, role_id) VALUES (?, ?, ?)`, [`ogretmen${i}`, hash, 2]);
+                for(let i=1; i<=5; i++) await runQuery(`INSERT INTO users (username, password_hash, role_id) VALUES (?, ?, ?)`, [`ogrenci${i}`, hash, 3]);
+                for(let i=1; i<=5; i++) await runQuery(`INSERT INTO users (username, password_hash, role_id) VALUES (?, ?, ?)`, [`veli${i}`, hash, 4]);
 
-                // Ödevleri Ekle
-                const insertHomework = db.prepare(`INSERT INTO odevler (ders_id, ogretmen_id, sinif_id, baslik, aciklama, teslim_tarihi, durum, sure_dakika) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`);
-                insertHomework.run(1, 2, 1, 'Türev Uygulamaları', 'Türev alma kuralları ile ilgili 50 soru', '2026-05-20', 'bekliyor', 120);
-                insertHomework.run(2, 2, 1, 'Kompozisyon', 'Yaz tatili planlarınız hakkında kompozisyon', '2026-05-21', 'bekliyor', 60);
-                insertHomework.run(3, 3, 1, 'Hücre Modeli', 'Bitki hücresi 3 boyutlu model yapımı', '2026-05-25', 'bekliyor', 180);
-                insertHomework.run(4, 4, 1, 'Coğrafi Keşifler', 'Harita üzerinde keşif yollarının çizilmesi', '2026-05-22', 'bekliyor', 90);
-                insertHomework.run(5, 5, 1, 'Present Perfect Tense', '10 cümle kurma ödevi', '2026-05-18', 'gonderildi', 45);
-                insertHomework.finalize();
+                // 5. Odevler (Ensure Teacher IDs match! ogretmen1 is ID=2)
+                const homeworks = [
+                    { ders_id: 1, ogretmen_id: 2, sinif_id: 1, baslik: 'Türev Uygulamaları', aciklama: 'Türev alma kuralları ile ilgili 50 soru', teslim_tarihi: '2026-05-20', durum: 'bekliyor', sure_dakika: 120 },
+                    { ders_id: 2, ogretmen_id: 3, sinif_id: 1, baslik: 'Kompozisyon', aciklama: 'Yaz tatili planlarınız hakkında kompozisyon', teslim_tarihi: '2026-05-21', durum: 'bekliyor', sure_dakika: 60 },
+                    { ders_id: 3, ogretmen_id: 4, sinif_id: 1, baslik: 'Hücre Modeli', aciklama: 'Bitki hücresi 3 boyutlu model yapımı', teslim_tarihi: '2026-05-25', durum: 'bekliyor', sure_dakika: 180 },
+                    { ders_id: 4, ogretmen_id: 5, sinif_id: 1, baslik: 'Coğrafi Keşifler', aciklama: 'Harita üzerinde keşif yollarının çizilmesi', teslim_tarihi: '2026-05-22', durum: 'bekliyor', sure_dakika: 90 },
+                    { ders_id: 5, ogretmen_id: 6, sinif_id: 1, baslik: 'Present Perfect Tense', aciklama: '10 cümle kurma ödevi', teslim_tarihi: '2026-05-18', durum: 'gonderildi', sure_dakika: 45 }
+                ];
+                for (let hw of homeworks) {
+                    await runQuery(`INSERT INTO odevler (ders_id, ogretmen_id, sinif_id, baslik, aciklama, teslim_tarihi, durum, sure_dakika) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, 
+                        [hw.ders_id, hw.ogretmen_id, hw.sinif_id, hw.baslik, hw.aciklama, hw.teslim_tarihi, hw.durum, hw.sure_dakika]);
+                }
 
-                // Teslimleri Ekle
-                const insertSubmission = db.prepare(`INSERT INTO odev_teslimleri (odev_id, ogrenci_id, not_degeri, ogretmen_notu) VALUES (?, ?, ?, ?)`);
-                insertSubmission.run(5, 7, 95, 'Harika bir iş!'); // odev_id:5, ogrenci1 (id:7)
-                insertSubmission.run(5, 8, 80, 'Biraz daha pratik yapmalısın.'); // ogrenci2 (id:8)
-                insertSubmission.run(5, 9, 100, 'Kusursuz!'); // ogrenci3 (id:9)
-                insertSubmission.run(5, 10, 60, 'Zamanlar karışmış.'); // ogrenci4 (id:10)
-                insertSubmission.run(5, 11, 75, 'İyi deneme.'); // ogrenci5 (id:11)
-                insertSubmission.finalize();
+                // 6. Teslimler (ogrenci1 is ID=7)
+                const submissions = [
+                    { odev_id: 5, ogrenci_id: 7, not: 95, yorum: 'Harika bir iş!' },
+                    { odev_id: 5, ogrenci_id: 8, not: 80, yorum: 'Biraz daha pratik yapmalısın.' },
+                    { odev_id: 5, ogrenci_id: 9, not: 100, yorum: 'Kusursuz!' },
+                    { odev_id: 5, ogrenci_id: 10, not: 60, yorum: 'Zamanlar karışmış.' },
+                    { odev_id: 5, ogrenci_id: 11, not: 75, yorum: 'İyi deneme.' }
+                ];
+                for (let sub of submissions) {
+                    await runQuery(`INSERT INTO odev_teslimleri (odev_id, ogrenci_id, not_degeri, ogretmen_notu) VALUES (?, ?, ?, ?)`, [sub.odev_id, sub.ogrenci_id, sub.not, sub.yorum]);
+                }
 
-                // Mesajları Ekle
-                const insertMessage = db.prepare(`INSERT INTO mesajlar (gonderen_id, alici_id, mesaj) VALUES (?, ?, ?)`);
-                insertMessage.run(2, 7, 'Ödevini zamanında teslim ettiğin için teşekkürler.'); // ogretmen1 -> ogrenci1
-                insertMessage.run(7, 2, 'Rica ederim hocam.');
-                insertMessage.run(12, 2, 'Çocuğumun durumu nasıl?'); // veli1(12) -> ogretmen1(2)
-                insertMessage.run(2, 12, 'Gayet başarılı gidiyor.'); 
-                insertMessage.run(3, 8, 'Matematik notlarında düşüş var.'); 
-                insertMessage.finalize();
+                // 7. Mesajlar
+                const messages = [
+                    { g: 2, a: 7, msg: 'Ödevini zamanında teslim ettiğin için teşekkürler.' },
+                    { g: 7, a: 2, msg: 'Rica ederim hocam.' },
+                    { g: 12, a: 2, msg: 'Çocuğumun durumu nasıl?' }, // veli1=12
+                    { g: 2, a: 12, msg: 'Gayet başarılı gidiyor.' },
+                    { g: 3, a: 8, msg: 'Matematik notlarında düşüş var.' }
+                ];
+                for (let m of messages) {
+                    await runQuery(`INSERT INTO mesajlar (gonderen_id, alici_id, mesaj) VALUES (?, ?, ?)`, [m.g, m.a, m.msg]);
+                }
 
-                // Devamsızlıkları Ekle
-                const insertAttendance = db.prepare(`INSERT INTO devamsizliklar (ogrenci_id, tarih, durum) VALUES (?, ?, ?)`);
-                insertAttendance.run(7, '2026-05-01', 'Tam Gün');
-                insertAttendance.run(7, '2026-05-05', 'Raporlu');
-                insertAttendance.run(8, '2026-05-02', 'İzinli');
-                insertAttendance.run(9, '2026-05-10', 'Yarım Gün');
-                insertAttendance.run(10, '2026-05-11', 'Tam Gün');
-                insertAttendance.finalize((err) => {
-                    if (err) return reject(err);
-                    console.log('Tüm veriler başarıyla eklendi! (Şifreler: 123)');
-                    resolve();
-                });
-            });
+                console.log('Tüm veriler başarıyla eklendi! (Şifreler: 123)');
+                resolve();
+
+            } catch (err) {
+                console.error("Veri eklenirken hata:", err);
+                reject(new Error('Veri ekleme hatası: ' + err.message));
+            }
         });
     });
 };
 
 if (require.main === module) {
-    const dbPath = path.resolve(__dirname, '../../database.sqlite');
-    if (fs.existsSync(dbPath)) {
-        fs.unlinkSync(dbPath);
-        console.log('Eski veritabanı silindi.');
-    }
     runSeed().then(() => process.exit(0)).catch((err) => {
         console.error(err);
         process.exit(1);
