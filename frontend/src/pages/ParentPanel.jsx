@@ -24,7 +24,7 @@ const ParentPanel = () => {
       const response = await axios.get('https://odevtakipsistemi.onrender.com/api/homeworks/student/3', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setHomeworks(response.data);
+      setHomeworks(Array.isArray(response.data) ? response.data : (response.data?.data || []));
     } catch (error) {
       console.error('Ödevler çekilemedi:', error);
     } finally {
@@ -36,7 +36,7 @@ const ParentPanel = () => {
     try {
       const token = localStorage.getItem('token');
       const res = await axios.get('https://odevtakipsistemi.onrender.com/api/attendance/student/3', { headers: { Authorization: `Bearer ${token}` } });
-      setAttendance(res.data);
+      setAttendance(Array.isArray(res.data) ? res.data : (res.data?.data || []));
     } catch (e) { console.error(e); }
   };
 

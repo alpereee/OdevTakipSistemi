@@ -1,6 +1,6 @@
 const path = require('path');
 const bcrypt = require('bcryptjs');
-const db = require('./database'); // Use existing connection
+const db = require('./database'); // Mevcut bağlantıyı kullanıyoruz
 
 const runSeed = async () => {
     return new Promise((resolve, reject) => {
@@ -32,7 +32,6 @@ const runSeed = async () => {
             if (err) return reject(new Error('Tablolar oluşturulurken hata: ' + err.message));
 
             try {
-                // Promisify run to avoid silent failures
                 const runQuery = (sql, params = []) => new Promise((res, rej) => {
                     db.run(sql, params, function(e) {
                         if (e) rej(e);
@@ -40,7 +39,7 @@ const runSeed = async () => {
                     });
                 });
 
-                // 1. Roles
+                // 1. Roller
                 const roles = [
                     { id: 1, name: 'Yönetici' },
                     { id: 2, name: 'Öğretmen' },
@@ -51,7 +50,7 @@ const runSeed = async () => {
                     await runQuery(`INSERT INTO roles (id, name) VALUES (?, ?)`, [r.id, r.name]);
                 }
 
-                // 2. Schools
+                // 2. Okullar
                 const schools = [
                     { ad: 'Atatürk İlkokulu', adres: 'Ankara Merkez' },
                     { ad: 'Cumhuriyet Ortaokulu', adres: 'İstanbul Şişli' },
@@ -69,35 +68,42 @@ const runSeed = async () => {
                     await runQuery(`INSERT INTO dersler (ad) VALUES (?)`, [d]);
                 }
 
-                // 4. Users
+                // 4. Kullanıcılar (Kesin ID ve İsim eşleşmesi - Frontend hardcoded testleri için)
                 const salt = bcrypt.genSaltSync(10);
                 const hash = bcrypt.hashSync('123', salt);
                 
+                // ID 1: admin
                 await runQuery(`INSERT INTO users (id, username, password_hash, role_id) VALUES (?, ?, ?, ?)`, [1, 'admin', hash, 1]);
-                for(let i=1; i<=5; i++) await runQuery(`INSERT INTO users (username, password_hash, role_id) VALUES (?, ?, ?)`, [`ogretmen${i}`, hash, 2]);
-                for(let i=1; i<=5; i++) await runQuery(`INSERT INTO users (username, password_hash, role_id) VALUES (?, ?, ?)`, [`ogrenci${i}`, hash, 3]);
-                for(let i=1; i<=5; i++) await runQuery(`INSERT INTO users (username, password_hash, role_id) VALUES (?, ?, ?)`, [`veli${i}`, hash, 4]);
+                // ID 2: ogretmen_ali
+                await runQuery(`INSERT INTO users (id, username, password_hash, role_id) VALUES (?, ?, ?, ?)`, [2, 'ogretmen_ali', hash, 2]);
+                // ID 3: ogrenci_ayse
+                await runQuery(`INSERT INTO users (id, username, password_hash, role_id) VALUES (?, ?, ?, ?)`, [3, 'ogrenci_ayse', hash, 3]);
+                // ID 4: veli_ahmet
+                await runQuery(`INSERT INTO users (id, username, password_hash, role_id) VALUES (?, ?, ?, ?)`, [4, 'veli_ahmet', hash, 4]);
 
-                // 5. Odevler (Ensure Teacher IDs match! ogretmen1 is ID=2)
+                // Ekstra test kullanıcıları
+                await runQuery(`INSERT INTO users (id, username, password_hash, role_id) VALUES (?, ?, ?, ?)`, [5, 'ogretmen_fatma', hash, 2]);
+                await runQuery(`INSERT INTO users (id, username, password_hash, role_id) VALUES (?, ?, ?, ?)`, [6, 'ogrenci_mehmet', hash, 3]);
+
+                // 5. Ödevler (ogretmen_ali ID=2)
                 const homeworks = [
-                    { ders_id: 1, ogretmen_id: 2, sinif_id: 1, baslik: 'Türev Uygulamaları', aciklama: 'Türev alma kuralları ile ilgili 50 soru', teslim_tarihi: '2026-05-20', durum: 'bekliyor', sure_dakika: 120 },
-                    { ders_id: 2, ogretmen_id: 3, sinif_id: 1, baslik: 'Kompozisyon', aciklama: 'Yaz tatili planlarınız hakkında kompozisyon', teslim_tarihi: '2026-05-21', durum: 'bekliyor', sure_dakika: 60 },
-                    { ders_id: 3, ogretmen_id: 4, sinif_id: 1, baslik: 'Hücre Modeli', aciklama: 'Bitki hücresi 3 boyutlu model yapımı', teslim_tarihi: '2026-05-25', durum: 'bekliyor', sure_dakika: 180 },
-                    { ders_id: 4, ogretmen_id: 5, sinif_id: 1, baslik: 'Coğrafi Keşifler', aciklama: 'Harita üzerinde keşif yollarının çizilmesi', teslim_tarihi: '2026-05-22', durum: 'bekliyor', sure_dakika: 90 },
-                    { ders_id: 5, ogretmen_id: 6, sinif_id: 1, baslik: 'Present Perfect Tense', aciklama: '10 cümle kurma ödevi', teslim_tarihi: '2026-05-18', durum: 'gonderildi', sure_dakika: 45 }
+                    { ders_id: 1, ogretmen_id: 2, sinif_id: 1, baslik: 'Türev Uygulamaları', aciklama: 'Türev alma kuralları ile ilgili 50 soru', teslim_tarihi: '2026-05-20', durum: 'gonderildi', sure_dakika: 120 },
+                    { ders_id: 2, ogretmen_id: 2, sinif_id: 1, baslik: 'Kompozisyon', aciklama: 'Yaz tatili planlarınız hakkında kompozisyon', teslim_tarihi: '2026-05-21', durum: 'gonderildi', sure_dakika: 60 },
+                    { ders_id: 3, ogretmen_id: 5, sinif_id: 1, baslik: 'Hücre Modeli', aciklama: 'Bitki hücresi 3 boyutlu model yapımı', teslim_tarihi: '2026-05-25', durum: 'bekliyor', sure_dakika: 180 },
+                    { ders_id: 4, ogretmen_id: 2, sinif_id: 1, baslik: 'Coğrafi Keşifler', aciklama: 'Harita üzerinde keşif yollarının çizilmesi', teslim_tarihi: '2026-05-22', durum: 'bekliyor', sure_dakika: 90 },
+                    { ders_id: 5, ogretmen_id: 5, sinif_id: 1, baslik: 'Present Perfect Tense', aciklama: '10 cümle kurma ödevi', teslim_tarihi: '2026-05-18', durum: 'gonderildi', sure_dakika: 45 }
                 ];
                 for (let hw of homeworks) {
                     await runQuery(`INSERT INTO odevler (ders_id, ogretmen_id, sinif_id, baslik, aciklama, teslim_tarihi, durum, sure_dakika) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`, 
                         [hw.ders_id, hw.ogretmen_id, hw.sinif_id, hw.baslik, hw.aciklama, hw.teslim_tarihi, hw.durum, hw.sure_dakika]);
                 }
 
-                // 6. Teslimler (ogrenci1 is ID=7)
+                // 6. Teslimler ve Notlar (ogrenci_ayse ID=3 için bolca XP kazandıracak notlar)
                 const submissions = [
-                    { odev_id: 5, ogrenci_id: 7, not: 95, yorum: 'Harika bir iş!' },
-                    { odev_id: 5, ogrenci_id: 8, not: 80, yorum: 'Biraz daha pratik yapmalısın.' },
-                    { odev_id: 5, ogrenci_id: 9, not: 100, yorum: 'Kusursuz!' },
-                    { odev_id: 5, ogrenci_id: 10, not: 60, yorum: 'Zamanlar karışmış.' },
-                    { odev_id: 5, ogrenci_id: 11, not: 75, yorum: 'İyi deneme.' }
+                    { odev_id: 1, ogrenci_id: 3, not: 95, yorum: 'Harika bir iş, Ayşe!' },
+                    { odev_id: 2, ogrenci_id: 3, not: 100, yorum: 'Kusursuz kompozisyon.' },
+                    { odev_id: 5, ogrenci_id: 3, not: 85, yorum: 'Gayet başarılı.' },
+                    { odev_id: 1, ogrenci_id: 6, not: 70, yorum: 'Biraz daha gayret etmelisin.' }
                 ];
                 for (let sub of submissions) {
                     await runQuery(`INSERT INTO odev_teslimleri (odev_id, ogrenci_id, not_degeri, ogretmen_notu) VALUES (?, ?, ?, ?)`, [sub.odev_id, sub.ogrenci_id, sub.not, sub.yorum]);
@@ -105,17 +111,23 @@ const runSeed = async () => {
 
                 // 7. Mesajlar
                 const messages = [
-                    { g: 2, a: 7, msg: 'Ödevini zamanında teslim ettiğin için teşekkürler.' },
-                    { g: 7, a: 2, msg: 'Rica ederim hocam.' },
-                    { g: 12, a: 2, msg: 'Çocuğumun durumu nasıl?' }, // veli1=12
-                    { g: 2, a: 12, msg: 'Gayet başarılı gidiyor.' },
-                    { g: 3, a: 8, msg: 'Matematik notlarında düşüş var.' }
+                    { g: 2, a: 3, msg: 'Ayşe, ödevlerini çok düzenli teslim ediyorsun, tebrikler.' },
+                    { g: 3, a: 2, msg: 'Teşekkür ederim Ali öğretmenim.' },
+                    { g: 4, a: 2, msg: 'Ali hocam, Ayşe nin matematik durumu nasıl?' }, // veli_ahmet ID=4
+                    { g: 2, a: 4, msg: 'Ahmet bey, Ayşe sınıfın en iyilerinden.' }
                 ];
                 for (let m of messages) {
                     await runQuery(`INSERT INTO mesajlar (gonderen_id, alici_id, mesaj) VALUES (?, ?, ?)`, [m.g, m.a, m.msg]);
                 }
 
-                console.log('Tüm veriler başarıyla eklendi! (Şifreler: 123)');
+                // 8. Duyurular
+                await runQuery(`INSERT INTO duyurular (baslik, icerik, yayinlayan_id) VALUES (?, ?, ?)`, 
+                    ['Yarıyıl Tatili Yaklaşıyor', 'Tüm öğrencilerimizin ödevlerini tatil öncesi tamamlaması önemle rica olunur.', 1]);
+
+                // 9. Devamsızlıklar
+                await runQuery(`INSERT INTO devamsizliklar (ogrenci_id, tarih, durum) VALUES (?, ?, ?)`, [3, '2026-05-02', 'Tam Gün']);
+
+                console.log('Veritabanı Ayşe, Ali ve Ahmet kullanıcılarıyla başarıyla tohumlandı!');
                 resolve();
 
             } catch (err) {

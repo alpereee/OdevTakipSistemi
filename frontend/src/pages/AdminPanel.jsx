@@ -30,22 +30,22 @@ const AdminPanel = () => {
   const fetchUsers = async () => {
     try {
       const res = await axios.get('https://odevtakipsistemi.onrender.com/api/users', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
-      setUsers(res.data);
-    } catch (e) { console.error(e); }
+      setUsers(Array.isArray(res.data) ? res.data : (res.data?.data || []));
+    } catch (e) { console.error(e); setUsers([]); }
   };
 
   const fetchAnnouncements = async () => {
     try {
       const res = await axios.get('https://odevtakipsistemi.onrender.com/api/announcements', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
-      setAnnouncements(res.data);
-    } catch (e) { console.error(e); }
+      setAnnouncements(Array.isArray(res.data) ? res.data : (res.data?.data || []));
+    } catch (e) { console.error(e); setAnnouncements([]); }
   };
 
   const fetchSchools = async () => {
     try {
       const res = await axios.get('https://odevtakipsistemi.onrender.com/api/schools', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
-      setSchools(res.data);
-    } catch (e) { console.error(e); }
+      setSchools(Array.isArray(res.data) ? res.data : (res.data?.data || []));
+    } catch (e) { console.error(e); setSchools([]); }
   };
 
   const handleLogout = () => {
