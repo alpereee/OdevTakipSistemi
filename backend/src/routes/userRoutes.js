@@ -20,6 +20,9 @@ router.get('/parent', verifyToken, checkRole([4]), userController.getParentDashb
 // Yönetici ve Öğretmen erişebilir
 router.get('/staff-only', verifyToken, checkRole([1, 2]), userController.getCommonData);
 
+// Alıcıları listeleme (Mesajlaşma için)
+router.get('/recipients', verifyToken, userController.getRecipients);
+
 // --- KULLANICI YÖNETİMİ ROTALARI (Sadece Yönetici) ---
 router.get('/', verifyToken, checkRole([1]), userController.getAllUsers);
 router.post('/', verifyToken, checkRole([1]), userController.createUser);

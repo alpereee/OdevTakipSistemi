@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { LogOut, MessageSquare, BookOpen, CheckCircle2, Send, Award, CalendarX2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import NotificationBell from '../components/NotificationBell';
 
 const ParentPanel = () => {
   const [activeTab, setActiveTab] = useState('academic'); // academic, attendance
@@ -66,11 +67,14 @@ const ParentPanel = () => {
         <div className="dashboard-header">
           <div>
             <h1>Veli Paneli</h1>
-            <p style={{ color: 'var(--text-muted)' }}>Öğrencinizin akademik performansını ve devamsızlıklarını takip edin.</p>
+            <p className="subtitle">Öğrencinizin akademik performansını ve devamsızlıklarını takip edin.</p>
           </div>
-          <button onClick={handleLogout} className="logout-btn">
-            <LogOut size={18} /> Çıkış
-          </button>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <NotificationBell />
+            <button onClick={handleLogout} className="logout-btn">
+              <LogOut size={18} /> Çıkış
+            </button>
+          </div>
         </div>
 
         <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', borderBottom: '1px solid var(--glass-border)', paddingBottom: '1rem' }}>
@@ -79,8 +83,8 @@ const ParentPanel = () => {
         </div>
 
         {activeTab === 'academic' && (
-          <div className="animate-fade-in">
-            <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div className="animate-fade-in card">
+            <h3 style={{ marginBottom: '1rem' }}>
               <Award size={20} color="var(--primary-color)" />
               Öğrenci Not Kartı & Performans Durumu
             </h3>
@@ -145,8 +149,8 @@ const ParentPanel = () => {
         )}
 
         {activeTab === 'attendance' && (
-          <div className="animate-fade-in">
-            <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div className="animate-fade-in card">
+            <h3 style={{ marginBottom: '1rem' }}>
               <CalendarX2 size={20} color="var(--danger)" /> Devamsızlık Takibi
             </h3>
             <table className="glass-table">
@@ -166,11 +170,12 @@ const ParentPanel = () => {
         )}
       </div>
 
-      <div className="glass-panel animate-fade-in">
-        <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <MessageSquare size={20} color="var(--warning)" />
-          Öğretmene Ulaşın (Geri Bildirim / Şikayet)
-        </h3>
+      <div className="glass-panel animate-fade-in" style={{ marginTop: '2rem' }}>
+        <div className="card">
+          <h3 style={{ marginBottom: '1rem' }}>
+            <MessageSquare size={20} color="var(--warning)" />
+            Öğretmene Ulaşın (Geri Bildirim / Şikayet)
+          </h3>
         {feedbackSuccess && <div style={{ background: 'rgba(16, 185, 129, 0.1)', color: 'var(--success)', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle2 size={20} /> {feedbackSuccess}</div>}
 
         <form onSubmit={handleFeedbackSubmit}>
@@ -178,11 +183,12 @@ const ParentPanel = () => {
             <textarea className="input-field" rows="3" placeholder="Mesajınızı buraya yazın..." value={feedback} onChange={e => setFeedback(e.target.value)} required style={{ resize: 'vertical' }}></textarea>
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <button type="submit" className="btn-primary" style={{ width: 'auto', padding: '0.75rem 2rem', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+            <button type="submit" className="btn-primary" style={{ width: 'auto', padding: '0.75rem 2rem' }}>
               <Send size={18} /> Gönder
             </button>
           </div>
         </form>
+        </div>
       </div>
     </div>
   );

@@ -3,6 +3,10 @@ import axios from 'axios';
 import { LogOut, AlertTriangle, PlusCircle, CheckCircle2, GraduationCap, Star, CalendarDays, BarChart3, MessageCircle, Send } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import NotificationBell from '../components/NotificationBell';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 
 const TeacherPanel = () => {
   const [activeTab, setActiveTab] = useState('homeworks'); // homeworks, analytics, messages
@@ -45,7 +49,7 @@ const TeacherPanel = () => {
 
   const fetchUsers = async () => {
     try {
-      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/users', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/users/recipients', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       setUsers(res.data);
     } catch (e) { }
   };
@@ -87,7 +91,12 @@ const TeacherPanel = () => {
     if (dosya) fd.append('dosya', dosya);
 
     try {
-      await axios.post('https://odevtakipsistemi.onrender.com/api/homeworks', fd, { headers: { Authorization: `Bearer ${token}` } });
+      await axios.post('https://odevtakipsistemi.onrender.com/api/homeworks', fd, { 
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        } 
+      });
       alert('Ödev eklendi'); setShowForm(false); fetchHomeworks(); checkHomeworkLoad();
     } catch (e) { alert('Hata'); }
   };
@@ -107,6 +116,30 @@ const TeacherPanel = () => {
     } catch (e) { alert('Hata'); }
   };
 
+  const exportPDF = () => {
+    const doc = new jsPDF();
+    doc.text("Ogrenciler ve Not Durumu", 14, 15);
+    const tableData = submissions.map(s => [s.ogrenci_adi, s.not_degeri || '-', s.ogretmen_notu || '-']);
+    doc.autoTable({
+      head: [['Ogrenci', 'Not', 'Geri Bildirim']],
+      body: tableData,
+      startY: 20
+    });
+    doc.save('notlar.pdf');
+  };
+
+  const exportExcel = () => {
+    const data = submissions.map(s => ({
+      Ogrenci: s.ogrenci_adi,
+      Not: s.not_degeri || '-',
+      Geri_Bildirim: s.ogretmen_notu || '-'
+    }));
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Notlar");
+    XLSX.writeFile(wb, "notlar.xlsx");
+  };
+
   // Mock data for charts
   const chartData = [
     { name: 'Pzt', Yük: 45 }, { name: 'Sal', Yük: 65 }, { name: 'Çar', Yük: 30 },
@@ -121,8 +154,11 @@ const TeacherPanel = () => {
 
       <div className="glass-panel animate-fade-in" style={{ marginBottom: '2rem' }}>
         <div className="dashboard-header">
-          <div><h1>Öğretmen Paneli</h1><p style={{ color: 'var(--text-muted)' }}>Sınıflar, Ödevler ve İletişim</p></div>
-          <button onClick={handleLogout} className="logout-btn"><LogOut size={18} /> Çıkış</button>
+          <div><h1>Öğretmen Paneli</h1><p className="subtitle">Sınıflar, Ödevler ve İletişim</p></div>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <NotificationBell />
+            <button onClick={handleLogout} className="logout-btn"><LogOut size={18} /> Çıkış</button>
+          </div>
         </div>
 
         <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', borderBottom: '1px solid var(--glass-border)', paddingBottom: '1rem' }}>
@@ -164,8 +200,14 @@ const TeacherPanel = () => {
             </table>
 
             {activeHomework && (
-              <div style={{ marginTop: '2rem', background: 'rgba(255,255,255,0.6)', padding: '1.5rem', borderRadius: '12px' }}>
-                <h4>Teslimler (Notlandırma)</h4>
+              <div className="card" style={{ marginTop: '2rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                  <h4>Teslimler (Notlandırma)</h4>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button className="btn-primary outline" style={{ width: 'auto', padding: '0.4rem 1rem' }} onClick={exportPDF}>PDF İndir</button>
+                    <button className="btn-primary outline" style={{ width: 'auto', padding: '0.4rem 1rem' }} onClick={exportExcel}>Excel İndir</button>
+                  </div>
+                </div>
                 {submissions.length === 0 ? <p>Teslim yok.</p> : (
                   <table className="glass-table" style={{ background: 'transparent' }}>
                     <thead><tr><th>Öğrenci</th><th>Not</th><th>Geri Bildirim</th><th>Kaydet</th></tr></thead>
@@ -187,35 +229,40 @@ const TeacherPanel = () => {
         )}
 
         {activeTab === 'analytics' && (
-          <div className="animate-fade-in">
-            <h3><BarChart3 size={20} style={{ verticalAlign: 'middle' }} /> Haftalık Ödev Yükü (Dakika)</h3>
-            <div style={{ height: '300px', background: 'rgba(255,255,255,0.5)', padding: '1rem', borderRadius: '12px', marginBottom: '2rem' }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="Yük" fill="var(--primary-color)" />
-                </BarChart>
-              </ResponsiveContainer>
+          <div className="animate-fade-in dashboard-grid">
+            <div className="card">
+              <h3><BarChart3 size={20} /> Haftalık Ödev Yükü (Dakika)</h3>
+              <div style={{ height: '300px', marginTop: '1rem' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} />
+                    <YAxis axisLine={false} tickLine={false} />
+                    <Tooltip cursor={{fill: '#f1f5f9'}} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }} />
+                    <Bar dataKey="Yük" fill="var(--primary-color)" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </div>
 
-            <h3><CalendarDays size={20} style={{ verticalAlign: 'middle' }} /> Basit Ödev Takvimi</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.5rem' }}>
-              {['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'].map(d => <div key={d} style={{ textAlign: 'center', fontWeight: 'bold' }}>{d}</div>)}
-              {Array.from({ length: 14 }).map((_, i) => (
-                <div key={i} style={{ padding: '1rem', background: i === 3 ? 'var(--danger)' : 'rgba(255,255,255,0.5)', color: i === 3 ? 'white' : 'inherit', borderRadius: '8px', minHeight: '60px' }}>
-                  {i + 1} {i === 3 && <div style={{ fontSize: '0.75rem', marginTop: '4px' }}>Matematik Teslimi</div>}
-                </div>
-              ))}
+            <div className="card">
+              <h3><CalendarDays size={20} /> Basit Ödev Takvimi</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.5rem', marginTop: '1rem' }}>
+                {['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'].map(d => <div key={d} style={{ textAlign: 'center', fontWeight: '600', fontSize: '0.85rem', color: 'var(--text-muted)' }}>{d}</div>)}
+                {Array.from({ length: 14 }).map((_, i) => (
+                  <div key={i} style={{ padding: '0.5rem', background: i === 3 ? 'var(--danger)' : '#f8fafc', color: i === 3 ? 'white' : 'inherit', borderRadius: '8px', minHeight: '60px', display: 'flex', flexDirection: 'column', fontSize: '0.9rem' }}>
+                    <span style={{ fontWeight: '500' }}>{i + 1}</span>
+                    {i === 3 && <div style={{ fontSize: '0.7rem', marginTop: 'auto', background: 'rgba(0,0,0,0.2)', padding: '2px 4px', borderRadius: '4px' }}>Matematik</div>}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}
 
         {activeTab === 'messages' && (
-          <div className="animate-fade-in">
-            <h3><MessageCircle size={20} style={{ verticalAlign: 'middle' }} /> Mesajlaşma</h3>
+          <div className="animate-fade-in card">
+            <h3><MessageCircle size={20} /> Mesajlaşma</h3>
             <form onSubmit={handleSendMessage} style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
               <select className="input-field" value={msgTo} onChange={e => setMsgTo(e.target.value)} required>
                 <option value="">Kime...</option>

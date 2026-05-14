@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { LogOut, BookOpen, Clock, Megaphone, MessageCircle, Send } from 'lucide-react';
+import { LogOut, BookOpen, Clock, Megaphone, MessageCircle, Send, Trophy, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import NotificationBell from '../components/NotificationBell';
 
 const StudentPanel = () => {
   const [activeTab, setActiveTab] = useState('homeworks');
@@ -38,7 +39,7 @@ const StudentPanel = () => {
 
   const fetchUsers = async () => {
     try {
-      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/users', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/users/recipients', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       setUsers(res.data);
     } catch (e) { }
   };
@@ -60,6 +61,25 @@ const StudentPanel = () => {
 
   const handleLogout = () => { localStorage.removeItem('token'); navigate('/login'); };
 
+  // Gamification Logic
+  const calculateXP = () => {
+    let xp = 0;
+    homeworks.forEach(hw => {
+      if (hw.durum === 'gonderildi') xp += 50;
+      if (hw.not_degeri) xp += Math.floor(hw.not_degeri / 10);
+    });
+    return xp;
+  };
+
+  const getBadge = (xp) => {
+    if (xp >= 200) return { name: 'Efsane', class: 'badge-gold' };
+    if (xp >= 100) return { name: 'Çalışkan', class: 'badge-silver' };
+    return { name: 'Çaylak', class: 'badge-bronze' };
+  };
+
+  const currentXP = calculateXP();
+  const badge = getBadge(currentXP);
+
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem' }}>
       {/* Duyuru Bandı */}
@@ -74,8 +94,22 @@ const StudentPanel = () => {
 
       <div className="glass-panel animate-fade-in">
         <div className="dashboard-header">
-          <div><h1>Öğrenci Paneli</h1><p style={{ color: 'var(--text-muted)' }}>Ödevlerinizi ve mesajlarınızı takip edin.</p></div>
-          <button onClick={handleLogout} className="logout-btn"><LogOut size={18} /> Çıkış</button>
+          <div>
+            <h1>Öğrenci Paneli</h1>
+            <p className="subtitle">Ödevlerinizi ve mesajlarınızı takip edin.</p>
+            <div style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <div className={`gamification-badge ${badge.class}`}>
+                <Trophy size={16} /> {badge.name}
+              </div>
+              <div style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--text-muted)' }}>
+                <Star size={16} style={{ verticalAlign: 'middle', color: 'var(--warning)' }} /> {currentXP} XP
+              </div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <NotificationBell />
+            <button onClick={handleLogout} className="logout-btn"><LogOut size={18} /> Çıkış</button>
+          </div>
         </div>
 
         <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', borderBottom: '1px solid var(--glass-border)', paddingBottom: '1rem' }}>
@@ -84,7 +118,7 @@ const StudentPanel = () => {
         </div>
 
         {activeTab === 'homeworks' && (
-          <div className="animate-fade-in">
+          <div className="animate-fade-in card">
             <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1rem' }}><BookOpen size={20} color="var(--primary-color)" /> Ödev Listesi (Sınıf 1)</h3>
             <div className="table-container">
               <table className="glass-table">
@@ -105,8 +139,8 @@ const StudentPanel = () => {
         )}
 
         {activeTab === 'messages' && (
-          <div className="animate-fade-in">
-            <h3><MessageCircle size={20} style={{ verticalAlign: 'middle' }} /> Mesajlaşma</h3>
+          <div className="animate-fade-in card">
+            <h3><MessageCircle size={20} /> Mesajlaşma</h3>
             <form onSubmit={handleSendMessage} style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
               <select className="input-field" value={msgTo} onChange={e => setMsgTo(e.target.value)} required>
                 <option value="">Kime...</option>

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { LogOut, Users, UserPlus, Trash2, BookOpen, PlusCircle, CheckCircle2, Megaphone, Settings, Building2 } from 'lucide-react';
+import NotificationBell from '../components/NotificationBell';
 
 const AdminPanel = () => {
   const [activeTab, setActiveTab] = useState('users'); // users, lessons, announcements, settings, schools
@@ -111,9 +112,12 @@ const AdminPanel = () => {
         <div className="dashboard-header">
           <div>
             <h1>Yönetici Paneli</h1>
-            <p style={{ color: 'var(--text-muted)' }}>Sistem yapılandırması ve kullanıcı yönetimi</p>
+            <p className="subtitle">Sistem yapılandırması ve kullanıcı yönetimi</p>
           </div>
-          <button onClick={handleLogout} className="logout-btn"><LogOut size={18} /> Çıkış</button>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <NotificationBell />
+            <button onClick={handleLogout} className="logout-btn"><LogOut size={18} /> Çıkış</button>
+          </div>
         </div>
 
         {/* Sekmeler */}
@@ -126,8 +130,8 @@ const AdminPanel = () => {
         </div>
 
         {activeTab === 'users' && (
-          <div className="animate-fade-in">
-            <h3><Users size={20} style={{ verticalAlign: 'middle' }} /> Kullanıcı Ekle</h3>
+          <div className="animate-fade-in card">
+            <h3><Users size={20} /> Kullanıcı Ekle</h3>
             <form onSubmit={handleAddUser} style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '2rem' }}>
               <input type="text" placeholder="Kullanıcı Adı" className="input-field" value={username} onChange={e => setUsername(e.target.value)} required />
               <input type="password" placeholder="Şifre" className="input-field" value={password} onChange={e => setPassword(e.target.value)} required />
@@ -153,8 +157,8 @@ const AdminPanel = () => {
         )}
 
         {activeTab === 'schools' && (
-          <div className="animate-fade-in">
-            <h3><Building2 size={20} style={{ verticalAlign: 'middle' }} /> Kurum / Okul Tanımla</h3>
+          <div className="animate-fade-in card">
+            <h3><Building2 size={20} /> Kurum / Okul Tanımla</h3>
             <form onSubmit={handleAddSchool} style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
               <input type="text" placeholder="Okul Adı" className="input-field" value={schoolName} onChange={e => setSchoolName(e.target.value)} required />
               <input type="text" placeholder="Adres (Opsiyonel)" className="input-field" value={schoolAddress} onChange={e => setSchoolAddress(e.target.value)} />
@@ -175,8 +179,8 @@ const AdminPanel = () => {
         )}
 
         {activeTab === 'lessons' && (
-          <div className="animate-fade-in">
-            <h3><BookOpen size={20} style={{ verticalAlign: 'middle' }} /> Ders / Bölüm Tanımla</h3>
+          <div className="animate-fade-in card">
+            <h3><BookOpen size={20} /> Ders / Bölüm Tanımla</h3>
             <form onSubmit={handleAddLesson} style={{ display: 'flex', gap: '1rem' }}>
               <input type="text" placeholder="Ders Adı" className="input-field" value={lessonName} onChange={e => setLessonName(e.target.value)} required />
               <button type="submit" className="btn-primary" style={{ width: 'auto' }}>Kaydet</button>
@@ -185,8 +189,8 @@ const AdminPanel = () => {
         )}
 
         {activeTab === 'announcements' && (
-          <div className="animate-fade-in">
-            <h3><Megaphone size={20} style={{ verticalAlign: 'middle' }} /> Genel Duyuru Yayınla</h3>
+          <div className="animate-fade-in card">
+            <h3><Megaphone size={20} /> Genel Duyuru Yayınla</h3>
             <form onSubmit={handleAddAnnouncement} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem' }}>
               <input type="text" placeholder="Duyuru Başlığı" className="input-field" value={annTitle} onChange={e => setAnnTitle(e.target.value)} required />
               <textarea placeholder="Duyuru İçeriği..." className="input-field" rows="3" value={annContent} onChange={e => setAnnContent(e.target.value)} required></textarea>
@@ -206,7 +210,7 @@ const AdminPanel = () => {
         )}
 
         {activeTab === 'settings' && (
-          <div className="animate-fade-in" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+          <div className="animate-fade-in card" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
             <Settings size={48} style={{ opacity: 0.5, marginBottom: '1rem' }} />
             <h3>Genel Yapılandırmalar</h3>
             <p>Sistem genel ayarları (okul adı, logo, dönem tarihleri) buradan yapılandırılabilir.</p>

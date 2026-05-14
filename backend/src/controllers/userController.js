@@ -114,6 +114,22 @@ const updateUserRole = (req, res) => {
     });
 };
 
+const getRecipients = (req, res) => {
+    const userId = req.userId;
+    const query = `
+        SELECT id, username, role_id 
+        FROM users 
+        WHERE id != ? AND role_id != 1
+        ORDER BY username ASC
+    `;
+    db.all(query, [userId], (err, rows) => {
+        if (err) {
+            return res.status(500).json({ message: 'Alıcılar getirilirken hata oluştu.', error: err.message });
+        }
+        res.json(rows);
+    });
+};
+
 module.exports = {
     getAdminDashboard,
     getTeacherDashboard,
@@ -123,5 +139,6 @@ module.exports = {
     getAllUsers,
     createUser,
     deleteUser,
-    updateUserRole
+    updateUserRole,
+    getRecipients
 };
