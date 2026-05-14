@@ -32,14 +32,8 @@ const login = (req, res) => {
         );
 
         res.json({
-            message: 'Giriş başarılı',
             token,
-            user: {
-                id: user.id,
-                username: user.username,
-                role_id: user.role_id,
-                role_name: user.role_name
-            }
+            role: Number(user.role_id)
         });
     });
 };

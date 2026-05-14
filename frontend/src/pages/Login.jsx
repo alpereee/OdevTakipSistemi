@@ -26,15 +26,25 @@ const Login = () => {
         password
       });
 
+      console.log("Sunucu Yanıtı:", response.data);
+
+      if (!response.data.token || response.data.role === undefined) {
+        setError("Sunucudan beklenen veriler (token/role) gelmedi.");
+        return;
+      }
+
       const { token, role } = response.data;
+      const userRole = Number(role);
+
       localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify({ username, role }));
+      localStorage.setItem('user', JSON.stringify({ username, role: userRole }));
 
       // Role göre yönlendirme (1: Admin, 2: Teacher, 3: Student, 4: Parent)
-      if (role === 1) navigate('/admin');
-      else if (role === 2) navigate('/teacher');
-      else if (role === 3) navigate('/student');
-      else if (role === 4) navigate('/parent');
+      if (userRole === 1) navigate('/admin');
+      else if (userRole === 2) navigate('/teacher');
+      else if (userRole === 3) navigate('/student');
+      else if (userRole === 4) navigate('/parent');
+      else setError("Geçersiz rol bilgisi.");
 
     } catch (err) {
       setError(err.response?.data?.message || 'Giriş başarısız. Lütfen bilgilerinizi kontrol edin.');
