@@ -109,8 +109,14 @@ const gradeSubmission = (req, res) => {
 const getHomeworksByStudent = (req, res) => {
     let { ogrenci_id } = req.params;
     
+    // 'my' anahtar kelimesi: giriş yapan kullanıcının kendi ID'si
     if (ogrenci_id === 'my') {
         ogrenci_id = req.userId;
+    } else {
+        ogrenci_id = parseInt(ogrenci_id);
+        if (isNaN(ogrenci_id)) {
+            return res.status(400).json({ message: 'Geçersiz öğrenci ID.' });
+        }
     }
 
     const query = `

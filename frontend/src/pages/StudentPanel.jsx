@@ -115,9 +115,9 @@ const StudentPanel = () => {
 
   // Gamification Logic (Dynamic from DB)
   const getBadge = (xp) => {
-    if (xp >= 500) return { name: 'Efsane', class: 'badge-gold' };
-    if (xp >= 150) return { name: 'Kalfa', class: 'badge-silver' };
-    return { name: 'Çaylak', class: 'badge-bronze' };
+    if (xp >= 500) return { name: 'Efsane 🏆', class: 'badge-gold' };
+    if (xp >= 150) return { name: 'Kalfa ⭐', class: 'badge-silver' };
+    return { name: 'Çaylak 📚', class: 'badge-bronze' };
   };
 
   const currentXP = currentUser?.xp || 0;

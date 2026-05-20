@@ -30,7 +30,7 @@ const runSeed = async () => {
             CREATE TABLE mesajlar (id INTEGER PRIMARY KEY AUTOINCREMENT, gonderen_id INTEGER NOT NULL, alici_id INTEGER NOT NULL, mesaj TEXT NOT NULL, tarih DATETIME DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (gonderen_id) REFERENCES users (id), FOREIGN KEY (alici_id) REFERENCES users (id));
             CREATE TABLE okullar (id INTEGER PRIMARY KEY AUTOINCREMENT, ad TEXT NOT NULL, adres TEXT, tarih DATETIME DEFAULT CURRENT_TIMESTAMP);
             CREATE TABLE siniflar (id INTEGER PRIMARY KEY AUTOINCREMENT, ad TEXT NOT NULL, ogretmen_id INTEGER NOT NULL, FOREIGN KEY (ogretmen_id) REFERENCES users (id));
-            CREATE TABLE devamsizliklar (id INTEGER PRIMARY KEY AUTOINCREMENT, ogrenci_id INTEGER NOT NULL, tarih DATE NOT NULL, durum TEXT NOT NULL CHECK(durum IN ('Tam Gün', 'Yarım Gün', 'Raporlu', 'İzinli')), FOREIGN KEY (ogrenci_id) REFERENCES users (id));
+            CREATE TABLE devamsizliklar (id INTEGER PRIMARY KEY AUTOINCREMENT, ogrenci_id INTEGER NOT NULL, tarih DATE NOT NULL, durum TEXT NOT NULL, FOREIGN KEY (ogrenci_id) REFERENCES users (id));
             CREATE TABLE bildirimler (id INTEGER PRIMARY KEY AUTOINCREMENT, alici_id INTEGER NOT NULL, baslik TEXT NOT NULL, icerik TEXT NOT NULL, okundu INTEGER DEFAULT 0, tarih DATETIME DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (alici_id) REFERENCES users (id));
         `;
 

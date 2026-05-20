@@ -130,7 +130,7 @@ function initDb() {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             ogrenci_id INTEGER NOT NULL,
             tarih DATE NOT NULL,
-            durum TEXT NOT NULL CHECK(durum IN ('Tam Gün', 'Yarım Gün', 'Raporlu', 'İzinli')),
+            durum TEXT NOT NULL,
             FOREIGN KEY (ogrenci_id) REFERENCES users (id)
         )`, () => {
             // Örnek devamsızlık verisi (ogrenci_ayse - id: 3 için)

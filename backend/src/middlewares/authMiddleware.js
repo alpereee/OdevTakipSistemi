@@ -35,7 +35,15 @@ const checkRole = (roles) => {
     };
 };
 
+const isTeacherOrAdmin = (req, res, next) => {
+    if (req.userRole === 1 || req.userRole === 2) {
+        return next();
+    }
+    return res.status(403).json({ message: 'Bu işlem için öğretmen veya yönetici yetkiniz gerekli.' });
+};
+
 module.exports = {
     verifyToken,
-    checkRole
+    checkRole,
+    isTeacherOrAdmin
 };

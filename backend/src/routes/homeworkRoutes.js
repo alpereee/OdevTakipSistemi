@@ -16,7 +16,7 @@ router.get('/:odev_id/submissions', verifyToken, checkRole([1, 2]), homeworkCont
 router.put('/submissions/:teslim_id/grade', verifyToken, checkRole([1, 2]), homeworkController.gradeSubmission);
 
 // Öğrencinin kendi ödevlerini ve notlarını listele (Öğrenci ve Veli)
-router.get('/student/:ogrenci_id', verifyToken, checkRole([3, 4]), homeworkController.getHomeworksByStudent);
+router.get('/student/:ogrenci_id', verifyToken, homeworkController.getHomeworksByStudent);
 
 // Öğrencinin ödev teslim etmesi (metin yanıtı)
 router.post('/:odev_id/submit', verifyToken, checkRole([3]), homeworkController.submitHomework);

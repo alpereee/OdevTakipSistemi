@@ -21,7 +21,8 @@ const ParentPanel = () => {
   const fetchHomeworks = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('https://odevtakipsistemi.onrender.com/api/homeworks/student/3', {
+      // Veli olarak baglı öğrencinin ödevlerini getir (sinif bazli dinamik)
+      const response = await axios.get('https://odevtakipsistemi.onrender.com/api/homeworks/student/my', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setHomeworks(Array.isArray(response.data) ? response.data : (response.data?.data || []));
@@ -35,8 +36,13 @@ const ParentPanel = () => {
   const fetchAttendance = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/attendance/student/3', { headers: { Authorization: `Bearer ${token}` } });
-      setAttendance(Array.isArray(res.data) ? res.data : (res.data?.data || []));
+      // Öğrencinin kendi devamsızlıklarını çek (my endpoint yok, user info'dan alınabilir)
+      const meRes = await axios.get('https://odevtakipsistemi.onrender.com/api/users/me', { headers: { Authorization: `Bearer ${token}` } });
+      const userId = meRes.data?.id;
+      if (userId) {
+        const res = await axios.get(`https://odevtakipsistemi.onrender.com/api/attendance/student/${userId}`, { headers: { Authorization: `Bearer ${token}` } });
+        setAttendance(Array.isArray(res.data) ? res.data : (res.data?.data || []));
+      }
     } catch (e) { console.error(e); }
   };
 
