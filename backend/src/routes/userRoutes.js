@@ -26,6 +26,15 @@ router.get('/recipients', verifyToken, userController.getRecipients);
 // Mevcut kullanıcının kendi bilgilerini alması
 router.get('/me', verifyToken, userController.getMe);
 
+// Öğrencileri listele (Yönetici ve Öğretmen)
+router.get('/students', verifyToken, checkRole([1, 2]), userController.getAllStudents);
+
+// Liderlik tablosunu getir
+router.get('/leaderboard/:sinif_id', verifyToken, userController.getLeaderboard);
+
+// Sınıf atama (Yönetici ve Öğretmen)
+router.put('/:id/class', verifyToken, checkRole([1, 2]), userController.updateUserClass);
+
 // --- KULLANICI YÖNETİMİ ROTALARI (Sadece Yönetici) ---
 router.get('/', verifyToken, checkRole([1]), userController.getAllUsers);
 router.post('/', verifyToken, checkRole([1]), userController.createUser);

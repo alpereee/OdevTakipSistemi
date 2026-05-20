@@ -4,6 +4,7 @@ const attendanceController = require('../controllers/attendanceController');
 const { verifyToken, isTeacherOrAdmin } = require('../middlewares/authMiddleware');
 
 router.get('/student/:student_id', verifyToken, attendanceController.getAttendanceByStudent);
+router.post('/batch', verifyToken, isTeacherOrAdmin, attendanceController.addBatchAttendance);
 router.post('/', verifyToken, isTeacherOrAdmin, attendanceController.addAttendance);
 
 module.exports = router;

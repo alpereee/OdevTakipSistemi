@@ -19,6 +19,7 @@ const StudentPanel = () => {
 
   // User state
   const [currentUser, setCurrentUser] = useState(null);
+  const [leaderboard, setLeaderboard] = useState([]);
 
   const navigate = useNavigate();
 
@@ -36,9 +37,19 @@ const StudentPanel = () => {
       try {
           const res = await axios.get('https://odevtakipsistemi.onrender.com/api/users/me', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
           setCurrentUser(res.data);
+          if (res.data && res.data.sinif_id) {
+              fetchLeaderboard(res.data.sinif_id);
+          }
       } catch (e) {
           console.error(e);
       }
+  };
+
+  const fetchLeaderboard = async (sinif_id) => {
+      try {
+          const res = await axios.get(`https://odevtakipsistemi.onrender.com/api/users/leaderboard/${sinif_id}`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+          setLeaderboard(res.data || []);
+      } catch (e) { console.error(e); }
   };
 
   const fetchHomeworks = async () => {
@@ -138,9 +149,26 @@ const StudentPanel = () => {
               </div>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            <NotificationBell />
-            <button onClick={handleLogout} className="logout-btn"><LogOut size={18} /> Çıkış</button>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+            <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '12px', border: '1px solid #e2e8f0', minWidth: '200px' }}>
+                <h4 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-dark)' }}>
+                    <Trophy size={16} color="var(--warning)" /> Sınıf Liderlik Tablosu
+                </h4>
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '0.85rem' }}>
+                    {leaderboard.map((lb, index) => (
+                        <li key={lb.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.25rem 0', borderBottom: index < 2 ? '1px solid #e2e8f0' : 'none', fontWeight: lb.id === currentUser?.id ? 'bold' : 'normal', color: lb.id === currentUser?.id ? 'var(--primary-color)' : 'inherit' }}>
+                            <span>{index + 1}. {lb.username}</span>
+                            <span>{lb.xp} XP</span>
+                        </li>
+                    ))}
+                    {leaderboard.length === 0 && <li style={{ color: 'var(--text-muted)' }}>Veri yok</li>}
+                </ul>
+            </div>
+            
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', height: '100%' }}>
+                <NotificationBell />
+                <button onClick={handleLogout} className="logout-btn"><LogOut size={18} /> Çıkış</button>
+            </div>
           </div>
         </div>
 

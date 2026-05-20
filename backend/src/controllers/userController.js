@@ -144,6 +144,37 @@ const getMe = (req, res) => {
     });
 };
 
+const getAllStudents = (req, res) => {
+    const query = `SELECT id, username, sinif_id, xp FROM users WHERE role_id = 3 ORDER BY username ASC`;
+    db.all(query, [], (err, rows) => {
+        if (err) return res.status(500).json({ message: 'Öğrenciler getirilemedi', error: err.message });
+        res.json(rows);
+    });
+};
+
+const updateUserClass = (req, res) => {
+    const { id } = req.params;
+    const { sinif_id } = req.body;
+    
+    // sinif_id can be null if removing from class
+    const updateVal = sinif_id ? parseInt(sinif_id) : null;
+    
+    db.run(`UPDATE users SET sinif_id = ? WHERE id = ? AND role_id = 3`, [updateVal, id], function(err) {
+        if (err) return res.status(500).json({ message: 'Sınıf atanırken hata oluştu.', error: err.message });
+        if (this.changes === 0) return res.status(404).json({ message: 'Öğrenci bulunamadı.' });
+        res.json({ message: 'Sınıf başarıyla atandı.' });
+    });
+};
+
+const getLeaderboard = (req, res) => {
+    const { sinif_id } = req.params;
+    const query = `SELECT id, username, xp FROM users WHERE role_id = 3 AND sinif_id = ? ORDER BY xp DESC LIMIT 3`;
+    db.all(query, [sinif_id], (err, rows) => {
+        if (err) return res.status(500).json({ message: 'Liderlik tablosu alınamadı', error: err.message });
+        res.json(rows);
+    });
+};
+
 module.exports = {
     getAdminDashboard,
     getTeacherDashboard,
@@ -154,5 +185,8 @@ module.exports = {
     createUser,
     updateUserRole,
     getRecipients,
-    getMe
+    getMe,
+    getAllStudents,
+    updateUserClass,
+    getLeaderboard
 };

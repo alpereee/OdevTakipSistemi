@@ -23,6 +23,11 @@ const TeacherPanel = () => {
   const [classes, setClasses] = useState([]);
   const [msgText, setMsgText] = useState('');
   const [msgTo, setMsgTo] = useState('');
+  
+  // Student & Attendance States
+  const [allStudents, setAllStudents] = useState([]);
+  const [attendanceDate, setAttendanceDate] = useState(new Date().toISOString().split('T')[0]);
+  const [attendanceData, setAttendanceData] = useState({});
 
   // Form States
   const [showForm, setShowForm] = useState(false);
@@ -36,6 +41,7 @@ const TeacherPanel = () => {
 
   useEffect(() => {
     fetchClasses();
+    fetchAllStudents();
     if (activeTab === 'messages') {
       fetchUsers();
       fetchMessages();
@@ -59,6 +65,35 @@ const TeacherPanel = () => {
       } catch (e) {
           setClasses([]);
       }
+  };
+
+  const fetchAllStudents = async () => {
+      try {
+          const res = await axios.get('https://odevtakipsistemi.onrender.com/api/users/students', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+          setAllStudents(res.data || []);
+      } catch (e) {}
+  };
+
+  const handleAssignClass = async (studentId, sinif_id) => {
+      try {
+          await axios.put(`https://odevtakipsistemi.onrender.com/api/users/${studentId}/class`, { sinif_id }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+          fetchAllStudents();
+      } catch (e) { alert('Öğrenci sınıfı güncellenemedi.'); }
+  };
+
+  const handleBatchAttendance = async (e) => {
+      e.preventDefault();
+      const records = Object.keys(attendanceData).map(studentId => ({
+          ogrenci_id: studentId,
+          durum: attendanceData[studentId]
+      }));
+      if (records.length === 0) return alert('Lütfen en az bir öğrencinin yoklamasını girin.');
+      
+      try {
+          await axios.post('https://odevtakipsistemi.onrender.com/api/attendance/batch', { records, tarih: attendanceDate }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+          alert('Yoklama başarıyla kaydedildi.');
+          setAttendanceData({});
+      } catch (e) { alert('Yoklama kaydedilemedi.'); }
   };
 
   const handleAddClass = async (e) => {
@@ -244,19 +279,80 @@ const TeacherPanel = () => {
 
         {activeTab === 'classes' && (
             <div className="animate-fade-in card">
-                <h3><Users size={20} style={{ verticalAlign: 'middle', marginRight: '8px' }} /> Sınıflarım</h3>
-                <form onSubmit={handleAddClass} style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
-                    <input type="text" className="input-field" placeholder="Yeni Sınıf Adı (Örn: 9-A)" value={newClassName} onChange={e => setNewClassName(e.target.value)} required />
-                    <button type="submit" className="btn-primary" style={{ width: 'auto' }}>Yeni Sınıf Ekle</button>
-                </form>
-                <table className="glass-table">
-                    <thead><tr><th>ID</th><th>Sınıf Adı</th></tr></thead>
-                    <tbody>
-                        {classes.length === 0 ? <tr><td colSpan="2">Sınıf bulunamadı.</td></tr> : classes.map(c => (
-                            <tr key={c.id}><td>{c.id}</td><td>{c.ad}</td></tr>
-                        ))}
-                    </tbody>
-                </table>
+                <h3><Users size={20} style={{ verticalAlign: 'middle', marginRight: '8px' }} /> Sınıflarım & Öğrenci Yönetimi</h3>
+                
+                <div style={{ display: 'flex', gap: '2rem', marginTop: '1rem', flexWrap: 'wrap' }}>
+                    <div style={{ flex: '1', minWidth: '300px' }}>
+                        <h4 style={{ marginBottom: '1rem' }}>Sınıflar</h4>
+                        <form onSubmit={handleAddClass} style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+                            <input type="text" className="input-field" placeholder="Yeni Sınıf Adı (Örn: 9-A)" value={newClassName} onChange={e => setNewClassName(e.target.value)} required />
+                            <button type="submit" className="btn-primary" style={{ width: 'auto' }}>Yeni Ekle</button>
+                        </form>
+                        <table className="glass-table">
+                            <thead><tr><th>Sınıf Seç</th><th>ID</th><th>Sınıf Adı</th></tr></thead>
+                            <tbody>
+                                {classes.length === 0 ? <tr><td colSpan="3">Sınıf bulunamadı.</td></tr> : classes.map(c => (
+                                    <tr key={c.id} style={{ background: selectedClassId === c.id.toString() ? 'rgba(99, 102, 241, 0.1)' : 'transparent' }}>
+                                        <td>
+                                            <input type="radio" name="classSelect" checked={selectedClassId === c.id.toString()} onChange={() => setSelectedClassId(c.id.toString())} />
+                                        </td>
+                                        <td>{c.id}</td><td>{c.ad}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div style={{ flex: '2', minWidth: '400px' }}>
+                        <h4 style={{ marginBottom: '1rem' }}>
+                            Öğrenci Yönetimi & Yoklama (Sınıf: {classes.find(c => c.id.toString() === selectedClassId)?.ad || '-'})
+                        </h4>
+                        
+                        <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '8px', marginBottom: '1rem' }}>
+                            <form onSubmit={handleBatchAttendance} style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                                <label style={{ fontWeight: '500' }}>Tarih:</label>
+                                <input type="date" className="input-field" style={{ width: 'auto', margin: 0 }} value={attendanceDate} onChange={e => setAttendanceDate(e.target.value)} required />
+                                <button type="submit" className="btn-primary" style={{ width: 'auto', background: 'var(--danger)' }}>Toplu Yoklama Kaydet</button>
+                            </form>
+                        </div>
+
+                        <table className="glass-table">
+                            <thead>
+                                <tr>
+                                    <th>Öğrenci Adı</th>
+                                    <th>Yoklama (Geldi/Gelmedi)</th>
+                                    <th>Sınıf İşlemi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {allStudents.length === 0 ? <tr><td colSpan="3">Öğrenci bulunamadı.</td></tr> : allStudents.map(student => {
+                                    const isCurrentClass = student.sinif_id?.toString() === selectedClassId;
+                                    
+                                    return (
+                                        <tr key={student.id} style={{ opacity: isCurrentClass ? 1 : 0.6 }}>
+                                            <td>{student.username} {isCurrentClass && <span className="status-badge success">Bu Sınıfta</span>}</td>
+                                            <td>
+                                                {isCurrentClass ? (
+                                                    <div style={{ display: 'flex', gap: '1rem' }}>
+                                                        <label><input type="radio" name={`att_${student.id}`} onChange={() => setAttendanceData({...attendanceData, [student.id]: 'Geldi'})} checked={attendanceData[student.id] === 'Geldi'} /> Geldi</label>
+                                                        <label><input type="radio" name={`att_${student.id}`} onChange={() => setAttendanceData({...attendanceData, [student.id]: 'Gelmedi'})} checked={attendanceData[student.id] === 'Gelmedi'} /> Gelmedi</label>
+                                                    </div>
+                                                ) : '-'}
+                                            </td>
+                                            <td>
+                                                {isCurrentClass ? (
+                                                    <button className="btn-primary outline" style={{ padding: '0.2rem 0.5rem', fontSize: '0.8rem', color: 'var(--danger)', borderColor: 'var(--danger)' }} onClick={() => handleAssignClass(student.id, null)}>Sınıftan Çıkar</button>
+                                                ) : (
+                                                    <button className="btn-primary" style={{ padding: '0.2rem 0.5rem', fontSize: '0.8rem' }} onClick={() => handleAssignClass(student.id, selectedClassId)}>Bu Sınıfa Ekle</button>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         )}
 
