@@ -1,10 +1,13 @@
 const path = require('path');
 const bcrypt = require('bcryptjs');
-const db = require('./database'); // Mevcut bağlantıyı kullanıyoruz
+const sqlite3 = require('sqlite3').verbose();
+const dbPath = path.resolve(__dirname, '../../database.sqlite');
+const db = new sqlite3.Database(dbPath);
 
 const runSeed = async () => {
     return new Promise((resolve, reject) => {
         const schema = `
+            DROP TABLE IF EXISTS bildirimler;
             DROP TABLE IF EXISTS devamsizliklar;
             DROP TABLE IF EXISTS mesajlar;
             DROP TABLE IF EXISTS duyurular;
@@ -18,7 +21,7 @@ const runSeed = async () => {
             DROP TABLE IF EXISTS siniflar;
 
             CREATE TABLE roles (id INTEGER PRIMARY KEY, name TEXT NOT NULL UNIQUE);
-            CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT NOT NULL UNIQUE, password_hash TEXT NOT NULL, role_id INTEGER NOT NULL, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (role_id) REFERENCES roles (id));
+            CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT NOT NULL UNIQUE, password_hash TEXT NOT NULL, role_id INTEGER NOT NULL, sinif_id INTEGER, xp INTEGER DEFAULT 0, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (role_id) REFERENCES roles (id));
             CREATE TABLE dersler (id INTEGER PRIMARY KEY AUTOINCREMENT, ad TEXT NOT NULL);
             CREATE TABLE odevler (id INTEGER PRIMARY KEY AUTOINCREMENT, ders_id INTEGER NOT NULL, ogretmen_id INTEGER NOT NULL, sinif_id INTEGER NOT NULL, baslik TEXT NOT NULL, aciklama TEXT, teslim_tarihi DATETIME, durum TEXT DEFAULT 'bekliyor' CHECK(durum IN ('bekliyor', 'gonderildi')), EstimatedDuration INTEGER NOT NULL DEFAULT 60, olusturma_tarihi DATETIME DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (ders_id) REFERENCES dersler (id), FOREIGN KEY (ogretmen_id) REFERENCES users (id));
             CREATE TABLE geri_bildirimler (id INTEGER PRIMARY KEY AUTOINCREMENT, veli_id INTEGER NOT NULL, mesaj TEXT NOT NULL, tarih DATETIME DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (veli_id) REFERENCES users (id));
@@ -28,6 +31,7 @@ const runSeed = async () => {
             CREATE TABLE okullar (id INTEGER PRIMARY KEY AUTOINCREMENT, ad TEXT NOT NULL, adres TEXT, tarih DATETIME DEFAULT CURRENT_TIMESTAMP);
             CREATE TABLE siniflar (id INTEGER PRIMARY KEY AUTOINCREMENT, ad TEXT NOT NULL, ogretmen_id INTEGER NOT NULL, FOREIGN KEY (ogretmen_id) REFERENCES users (id));
             CREATE TABLE devamsizliklar (id INTEGER PRIMARY KEY AUTOINCREMENT, ogrenci_id INTEGER NOT NULL, tarih DATE NOT NULL, durum TEXT NOT NULL CHECK(durum IN ('Tam Gün', 'Yarım Gün', 'Raporlu', 'İzinli')), FOREIGN KEY (ogrenci_id) REFERENCES users (id));
+            CREATE TABLE bildirimler (id INTEGER PRIMARY KEY AUTOINCREMENT, alici_id INTEGER NOT NULL, baslik TEXT NOT NULL, icerik TEXT NOT NULL, okundu INTEGER DEFAULT 0, tarih DATETIME DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (alici_id) REFERENCES users (id));
         `;
 
         db.exec(schema, async (err) => {
@@ -78,14 +82,14 @@ const runSeed = async () => {
                 await runQuery(`INSERT INTO users (id, username, password_hash, role_id) VALUES (?, ?, ?, ?)`, [1, 'admin', hash, 1]);
                 // ID 2: ogretmen_ali
                 await runQuery(`INSERT INTO users (id, username, password_hash, role_id) VALUES (?, ?, ?, ?)`, [2, 'ogretmen_ali', hash, 2]);
-                // ID 3: ogrenci_ayse
-                await runQuery(`INSERT INTO users (id, username, password_hash, role_id) VALUES (?, ?, ?, ?)`, [3, 'ogrenci_ayse', hash, 3]);
+                // ID 3: ogrenci_ayse (Sınıf 1, 150 XP)
+                await runQuery(`INSERT INTO users (id, username, password_hash, role_id, sinif_id, xp) VALUES (?, ?, ?, ?, ?, ?)`, [3, 'ogrenci_ayse', hash, 3, 1, 150]);
                 // ID 4: veli_ahmet
                 await runQuery(`INSERT INTO users (id, username, password_hash, role_id) VALUES (?, ?, ?, ?)`, [4, 'veli_ahmet', hash, 4]);
 
                 // Ekstra test kullanıcıları
                 await runQuery(`INSERT INTO users (id, username, password_hash, role_id) VALUES (?, ?, ?, ?)`, [5, 'ogretmen_fatma', hash, 2]);
-                await runQuery(`INSERT INTO users (id, username, password_hash, role_id) VALUES (?, ?, ?, ?)`, [6, 'ogrenci_mehmet', hash, 3]);
+                await runQuery(`INSERT INTO users (id, username, password_hash, role_id, sinif_id, xp) VALUES (?, ?, ?, ?, ?, ?)`, [6, 'ogrenci_mehmet', hash, 3, 1, 20]);
 
                 // 5. Sınıfları Ekle
                 console.log('Sınıflar oluşturuluyor...');

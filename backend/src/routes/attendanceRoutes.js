@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const attendanceController = require('../controllers/attendanceController');
-const { verifyToken, checkRole } = require('../middlewares/authMiddleware');
+const { verifyToken, isTeacherOrAdmin } = require('../middlewares/authMiddleware');
 
-router.get('/student/:ogrenci_id', verifyToken, checkRole([1, 2, 3, 4]), attendanceController.getAttendanceByStudent);
+router.get('/student/:student_id', verifyToken, attendanceController.getAttendanceByStudent);
+router.post('/', verifyToken, isTeacherOrAdmin, attendanceController.addAttendance);
 
 module.exports = router;

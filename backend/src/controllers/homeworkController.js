@@ -30,7 +30,18 @@ const createHomework = (req, res) => {
             if (err) {
                 return res.status(500).json({ message: 'Ödev eklenirken hata oluştu', error: err.message });
             }
-            res.status(201).json({ message: 'Ödev başarıyla eklendi', id: this.lastID });
+            const newHomeworkId = this.lastID;
+            
+            // Sınıftaki öğrencilere bildirim gönder
+            const notificationQuery = `INSERT INTO bildirimler (alici_id, baslik, icerik) 
+                                       SELECT id, 'Yeni Ödev Eklendi', ? FROM users WHERE sinif_id = ? AND role_id = 3`;
+            const notificationContent = `${baslik} başlıklı yeni bir ödeviniz var. Teslim: ${teslim_tarihi}`;
+            
+            db.run(notificationQuery, [notificationContent, sinif_id], (notifErr) => {
+                if (notifErr) console.error("Bildirim eklenemedi:", notifErr);
+            });
+
+            res.status(201).json({ message: 'Ödev başarıyla eklendi', id: newHomeworkId });
         });
     });
 };
@@ -96,10 +107,11 @@ const gradeSubmission = (req, res) => {
 
 // Öğrencinin ödevlerini ve teslim durumlarını getir (Öğrenci ve Veli için)
 const getHomeworksByStudent = (req, res) => {
-    const { ogrenci_id } = req.params;
-
-    // Öğrencinin sınıfını basitleştirmek adına 1 olarak kabul ediyoruz (iskelet olduğu için)
-    const sinif_id = 1;
+    let { ogrenci_id } = req.params;
+    
+    if (ogrenci_id === 'my') {
+        ogrenci_id = req.userId;
+    }
 
     const query = `
         SELECT o.*, d.ad as ders_adi, u.username as ogretmen_adi, 
@@ -107,11 +119,11 @@ const getHomeworksByStudent = (req, res) => {
         FROM odevler o 
         JOIN dersler d ON o.ders_id = d.id 
         JOIN users u ON o.ogretmen_id = u.id 
+        JOIN users ogrenci ON ogrenci.id = ? AND ogrenci.sinif_id = o.sinif_id
         LEFT JOIN odev_teslimleri t ON o.id = t.odev_id AND t.ogrenci_id = ?
-        WHERE o.sinif_id = ?
     `;
 
-    db.all(query, [ogrenci_id, sinif_id], (err, rows) => {
+    db.all(query, [ogrenci_id, ogrenci_id], (err, rows) => {
         if (err) {
             return res.status(500).json({ message: 'Ödevler getirilirken hata oluştu', error: err.message });
         }
@@ -135,9 +147,16 @@ const submitHomework = (req, res) => {
             return res.status(500).json({ message: 'Ödev teslimi sırasında hata oluştu', error: err.message });
         }
         
-        // Ödev durumunu "gonderildi" olarak güncelle (Opsiyonel ama mantıklı)
-        db.run(`UPDATE odevler SET durum = 'gonderildi' WHERE id = ?`, [odev_id], () => {
-            res.status(201).json({ message: 'Ödev başarıyla teslim edildi', id: this.lastID });
+        const teslimId = this.lastID;
+
+        // Öğrenciye XP ekle
+        db.run(`UPDATE users SET xp = xp + 50 WHERE id = ?`, [ogrenci_id], (xpErr) => {
+            if (xpErr) console.error("XP güncellenemedi:", xpErr);
+            
+            // Ödev durumunu "gonderildi" olarak güncelle (Opsiyonel ama mantıklı)
+            db.run(`UPDATE odevler SET durum = 'gonderildi' WHERE id = ?`, [odev_id], () => {
+                res.status(201).json({ message: 'Ödev başarıyla teslim edildi', id: teslimId });
+            });
         });
     });
 };

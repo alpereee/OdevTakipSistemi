@@ -130,6 +130,20 @@ const getRecipients = (req, res) => {
     });
 };
 
+const getMe = (req, res) => {
+    const userId = req.userId;
+    const query = `SELECT id, username, role_id, sinif_id, xp, created_at FROM users WHERE id = ?`;
+    db.get(query, [userId], (err, row) => {
+        if (err) {
+            return res.status(500).json({ message: 'Kullanıcı bilgileri alınamadı', error: err.message });
+        }
+        if (!row) {
+            return res.status(404).json({ message: 'Kullanıcı bulunamadı' });
+        }
+        res.json(row);
+    });
+};
+
 module.exports = {
     getAdminDashboard,
     getTeacherDashboard,
@@ -138,7 +152,7 @@ module.exports = {
     getCommonData,
     getAllUsers,
     createUser,
-    deleteUser,
     updateUserRole,
-    getRecipients
+    getRecipients,
+    getMe
 };

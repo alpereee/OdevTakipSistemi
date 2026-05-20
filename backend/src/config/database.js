@@ -26,6 +26,8 @@ function initDb() {
             username TEXT NOT NULL UNIQUE,
             password_hash TEXT NOT NULL,
             role_id INTEGER NOT NULL,
+            sinif_id INTEGER,
+            xp INTEGER DEFAULT 0,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (role_id) REFERENCES roles (id)
         )`);
@@ -95,6 +97,17 @@ function initDb() {
             FOREIGN KEY (alici_id) REFERENCES users (id)
         )`);
 
+
+        // Bildirimler Tablosu
+        db.run(`CREATE TABLE IF NOT EXISTS bildirimler (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            alici_id INTEGER NOT NULL,
+            baslik TEXT NOT NULL,
+            icerik TEXT NOT NULL,
+            okundu INTEGER DEFAULT 0,
+            tarih DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (alici_id) REFERENCES users (id)
+        )`);
 
         // Okullar Tablosu
         db.run(`CREATE TABLE IF NOT EXISTS okullar (

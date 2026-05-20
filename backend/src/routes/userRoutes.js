@@ -23,6 +23,9 @@ router.get('/staff-only', verifyToken, checkRole([1, 2]), userController.getComm
 // Alıcıları listeleme (Mesajlaşma için)
 router.get('/recipients', verifyToken, userController.getRecipients);
 
+// Mevcut kullanıcının kendi bilgilerini alması
+router.get('/me', verifyToken, userController.getMe);
+
 // --- KULLANICI YÖNETİMİ ROTALARI (Sadece Yönetici) ---
 router.get('/', verifyToken, checkRole([1]), userController.getAllUsers);
 router.post('/', verifyToken, checkRole([1]), userController.createUser);

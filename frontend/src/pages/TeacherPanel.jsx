@@ -201,6 +201,13 @@ const TeacherPanel = () => {
     { name: 'Per', Yük: totalLoad }, { name: 'Cum', Yük: 0 }
   ];
 
+  const calculatePerformance = () => {
+    if (homeworks.length === 0) return 0;
+    const completed = homeworks.filter(h => h.durum === 'gonderildi').length;
+    return Math.round((completed / homeworks.length) * 100);
+  };
+  const performanceRate = calculatePerformance();
+
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem' }}>
       
@@ -365,6 +372,22 @@ const TeacherPanel = () => {
                     {i === 3 && <div style={{ fontSize: '0.7rem', marginTop: 'auto', background: 'rgba(0,0,0,0.2)', padding: '2px 4px', borderRadius: '4px' }}>Yaklaşan Teslim</div>}
                   </div>
                 ))}
+              </div>
+            </div>
+
+            <div className="card" style={{ gridColumn: '1 / -1' }}>
+              <h3>Ödev Performans Raporu (Seçili Sınıf)</h3>
+              <div style={{ marginTop: '1rem', background: '#f8fafc', padding: '1.5rem', borderRadius: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                  <span style={{ fontWeight: '600' }}>Sınıfın Gönderim Başarısı</span>
+                  <span style={{ fontWeight: 'bold', color: performanceRate >= 50 ? '#10b981' : '#ef4444' }}>%{performanceRate}</span>
+                </div>
+                <div style={{ width: '100%', height: '12px', background: '#e2e8f0', borderRadius: '6px', overflow: 'hidden' }}>
+                  <div style={{ width: `${performanceRate}%`, height: '100%', background: performanceRate >= 50 ? '#10b981' : '#ef4444', transition: 'width 0.5s ease-in-out' }}></div>
+                </div>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
+                  Atanan {homeworks.length} ödevden {homeworks.filter(h => h.durum === 'gonderildi').length} tanesi (en az bir öğrenci tarafından) teslim edildi.
+                </p>
               </div>
             </div>
           </div>

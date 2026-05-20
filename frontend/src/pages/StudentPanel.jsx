@@ -17,9 +17,13 @@ const StudentPanel = () => {
   const [activeHomeworkSubmit, setActiveHomeworkSubmit] = useState(null);
   const [yanitMetni, setYanitMetni] = useState('');
 
+  // User state
+  const [currentUser, setCurrentUser] = useState(null);
+
   const navigate = useNavigate();
 
   useEffect(() => {
+    fetchMe();
     fetchHomeworks();
     fetchAnnouncements();
     if (activeTab === 'messages') {
@@ -28,9 +32,18 @@ const StudentPanel = () => {
     }
   }, [activeTab]);
 
+  const fetchMe = async () => {
+      try {
+          const res = await axios.get('https://odevtakipsistemi.onrender.com/api/users/me', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+          setCurrentUser(res.data);
+      } catch (e) {
+          console.error(e);
+      }
+  };
+
   const fetchHomeworks = async () => {
     try {
-      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/homeworks/student/3', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/homeworks/student/my', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       setHomeworks(Array.isArray(res.data) ? res.data : (res.data?.data || []));
     } catch (error) {
       setHomeworks([]);
@@ -79,32 +92,24 @@ const StudentPanel = () => {
               { yanit_metni: yanitMetni }, 
               { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
           );
-          alert('Ödev başarıyla teslim edildi!');
+          alert('Ödev başarıyla teslim edildi! +50 XP kazandınız.');
           setYanitMetni('');
           setActiveHomeworkSubmit(null);
-          fetchHomeworks(); // Refresh status
+          fetchHomeworks();
+          fetchMe(); // Refresh XP
       } catch (e) { alert('Teslim sırasında bir hata oluştu.'); }
   };
 
   const handleLogout = () => { localStorage.removeItem('token'); navigate('/login'); };
 
-  // Gamification Logic
-  const calculateXP = () => {
-    let xp = 0;
-    homeworks.forEach(hw => {
-      if (hw.durum === 'gonderildi') xp += 50;
-      if (hw.not_degeri) xp += Math.floor(hw.not_degeri / 10);
-    });
-    return xp;
-  };
-
+  // Gamification Logic (Dynamic from DB)
   const getBadge = (xp) => {
-    if (xp >= 200) return { name: 'Efsane', class: 'badge-gold' };
-    if (xp >= 100) return { name: 'Çalışkan', class: 'badge-silver' };
+    if (xp >= 500) return { name: 'Efsane', class: 'badge-gold' };
+    if (xp >= 150) return { name: 'Kalfa', class: 'badge-silver' };
     return { name: 'Çaylak', class: 'badge-bronze' };
   };
 
-  const currentXP = calculateXP();
+  const currentXP = currentUser?.xp || 0;
   const badge = getBadge(currentXP);
 
   return (
@@ -151,7 +156,7 @@ const StudentPanel = () => {
               <table className="glass-table">
                 <thead><tr><th>Ders</th><th>Başlık</th><th>Öğretmen</th><th>Süre</th><th>Teslim</th><th>Durum</th><th>İşlem</th></tr></thead>
                 <tbody>
-                  {homeworks.map(hw => {
+                  {homeworks.length === 0 ? <tr><td colSpan="7" style={{ textAlign: 'center' }}>Görünecek ödev yok.</td></tr> : homeworks.map(hw => {
                       const isPassed = new Date(hw.teslim_tarihi) < new Date();
                       const isCompleted = hw.durum === 'gonderildi';
                       
