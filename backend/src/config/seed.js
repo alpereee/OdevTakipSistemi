@@ -15,6 +15,7 @@ const runSeed = async () => {
             DROP TABLE IF EXISTS users;
             DROP TABLE IF EXISTS roles;
             DROP TABLE IF EXISTS okullar;
+            DROP TABLE IF EXISTS siniflar;
 
             CREATE TABLE roles (id INTEGER PRIMARY KEY, name TEXT NOT NULL UNIQUE);
             CREATE TABLE users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT NOT NULL UNIQUE, password_hash TEXT NOT NULL, role_id INTEGER NOT NULL, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (role_id) REFERENCES roles (id));

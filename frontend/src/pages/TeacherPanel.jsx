@@ -36,12 +36,15 @@ const TeacherPanel = () => {
 
   useEffect(() => {
     fetchClasses();
-    fetchHomeworks();
     if (activeTab === 'messages') {
       fetchUsers();
       fetchMessages();
     }
   }, [activeTab]);
+
+  useEffect(() => {
+    fetchHomeworks();
+  }, [selectedClassId]);
 
   useEffect(() => {
       if(selectedClassId && teslimTarihi) {
@@ -162,7 +165,9 @@ const TeacherPanel = () => {
     e.preventDefault();
     try {
       await axios.post('https://odevtakipsistemi.onrender.com/api/messages/send', { alici_id: msgTo, mesaj: msgText }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
-      alert('Mesaj gönderildi'); setMsgText('');
+      alert('Mesaj gönderildi'); 
+      setMsgText('');
+      fetchMessages();
     } catch (e) { alert('Hata'); }
   };
 
@@ -253,7 +258,7 @@ const TeacherPanel = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', alignItems: 'center' }}>
               <h3><GraduationCap size={20} style={{ verticalAlign: 'middle' }} /> Verilen Ödevler</h3>
               <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                  <select className="input-field" style={{ width: 'auto', margin: 0, padding: '0.4rem 1rem' }} value={selectedClassId} onChange={e => { setSelectedClassId(e.target.value); fetchHomeworks(); }}>
+                  <select className="input-field" style={{ width: 'auto', margin: 0, padding: '0.4rem 1rem' }} value={selectedClassId} onChange={e => setSelectedClassId(e.target.value)}>
                       <option value="1">Sınıf Seçin (Varsayılan: 1)</option>
                       {classes.map(c => <option key={c.id} value={c.id}>{c.ad}</option>)}
                   </select>

@@ -66,7 +66,9 @@ const StudentPanel = () => {
     e.preventDefault();
     try {
       await axios.post('https://odevtakipsistemi.onrender.com/api/messages/send', { alici_id: msgTo, mesaj: msgText }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
-      alert('Mesaj gönderildi'); setMsgText('');
+      alert('Mesaj gönderildi'); 
+      setMsgText('');
+      fetchMessages();
     } catch (e) { alert('Hata'); }
   };
 
