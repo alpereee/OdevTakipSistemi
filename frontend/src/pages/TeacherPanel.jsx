@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { LogOut, AlertTriangle, PlusCircle, CheckCircle2, GraduationCap, Star, CalendarDays, BarChart3, MessageCircle, Send } from 'lucide-react';
+import { LogOut, AlertTriangle, PlusCircle, CheckCircle2, GraduationCap, Star, CalendarDays, BarChart3, MessageCircle, Send, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import NotificationBell from '../components/NotificationBell';
@@ -9,9 +9,10 @@ import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 
 const TeacherPanel = () => {
-  const [activeTab, setActiveTab] = useState('homeworks'); // homeworks, analytics, messages
+  const [activeTab, setActiveTab] = useState('homeworks'); // homeworks, analytics, messages, classes
 
   const [warning, setWarning] = useState('');
+  const [highLoadError, setHighLoadError] = useState('');
   const [totalLoad, setTotalLoad] = useState(0);
   const [homeworks, setHomeworks] = useState([]);
   const [submissions, setSubmissions] = useState([]);
@@ -19,6 +20,7 @@ const TeacherPanel = () => {
   const [gradeData, setGradeData] = useState({});
   const [users, setUsers] = useState([]);
   const [messages, setMessages] = useState([]);
+  const [classes, setClasses] = useState([]);
   const [msgText, setMsgText] = useState('');
   const [msgTo, setMsgTo] = useState('');
 
@@ -26,23 +28,49 @@ const TeacherPanel = () => {
   const [showForm, setShowForm] = useState(false);
   const [baslik, setBaslik] = useState('');
   const [aciklama, setAciklama] = useState('');
-  const [sureDakika, setSureDakika] = useState('');
+  const [estimatedDuration, setEstimatedDuration] = useState('');
   const [teslimTarihi, setTeslimTarihi] = useState('');
-  const [dosya, setDosya] = useState(null);
+  const [selectedClassId, setSelectedClassId] = useState('1'); // Default or selected class
+  const [newClassName, setNewClassName] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
+    fetchClasses();
     fetchHomeworks();
-    checkHomeworkLoad();
     if (activeTab === 'messages') {
       fetchUsers();
       fetchMessages();
     }
   }, [activeTab]);
 
+  useEffect(() => {
+      if(selectedClassId && teslimTarihi) {
+          checkHomeworkLoad(selectedClassId, teslimTarihi);
+      }
+  }, [selectedClassId, teslimTarihi]);
+
+  const fetchClasses = async () => {
+      try {
+          const res = await axios.get('https://odevtakipsistemi.onrender.com/api/classes', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+          setClasses(Array.isArray(res.data) ? res.data : (res.data?.data || []));
+      } catch (e) {
+          setClasses([]);
+      }
+  };
+
+  const handleAddClass = async (e) => {
+      e.preventDefault();
+      try {
+          await axios.post('https://odevtakipsistemi.onrender.com/api/classes', { ad: newClassName }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+          alert('Sınıf başarıyla eklendi.');
+          setNewClassName('');
+          fetchClasses();
+      } catch(e) { alert('Hata'); }
+  };
+
   const fetchHomeworks = async () => {
     try {
-      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/homeworks/class/1', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      const res = await axios.get(`https://odevtakipsistemi.onrender.com/api/homeworks/class/${selectedClassId || 1}`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       setHomeworks(Array.isArray(res.data) ? res.data : (res.data?.data || []));
     } catch (e) {
       setHomeworks([]);
@@ -67,9 +95,10 @@ const TeacherPanel = () => {
     }
   };
 
-  const checkHomeworkLoad = async () => {
+  const checkHomeworkLoad = async (sinif_id, tarih) => {
     try {
-      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/analytics/homework-load?sinif_id=1', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      const url = `https://odevtakipsistemi.onrender.com/api/analytics/homework-load?sinif_id=${sinif_id}${tarih ? `&tarih=${tarih}` : ''}`;
+      const res = await axios.get(url, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       setTotalLoad(res.data.toplam_sure_dakika);
       setWarning(res.data.warning || '');
     } catch (e) { }
@@ -93,21 +122,33 @@ const TeacherPanel = () => {
 
   const handleHomeworkSubmit = async (e) => {
     e.preventDefault();
+    setHighLoadError('');
     const token = localStorage.getItem('token');
-    const fd = new FormData();
-    fd.append('ders_id', 1); fd.append('sinif_id', 1); fd.append('baslik', baslik);
-    fd.append('aciklama', aciklama); fd.append('sure_dakika', sureDakika); fd.append('teslim_tarihi', teslimTarihi);
-    if (dosya) fd.append('dosya', dosya);
+    
+    // Sınıf ID 1 varsayılıyor test için ama classes entegrasyonu varsa dinamik seçilebilir.
+    const payload = {
+        ders_id: 1, 
+        sinif_id: selectedClassId || 1, 
+        baslik,
+        aciklama, 
+        EstimatedDuration: estimatedDuration, 
+        teslim_tarihi: teslimTarihi
+    };
 
     try {
-      await axios.post('https://odevtakipsistemi.onrender.com/api/homeworks', fd, { 
+      await axios.post('https://odevtakipsistemi.onrender.com/api/homeworks', payload, { 
         headers: { 
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
+          Authorization: `Bearer ${token}`
         } 
       });
-      alert('Ödev eklendi'); setShowForm(false); fetchHomeworks(); checkHomeworkLoad();
-    } catch (e) { alert('Hata'); }
+      alert('Ödev eklendi'); setShowForm(false); fetchHomeworks(); checkHomeworkLoad(selectedClassId || 1, teslimTarihi);
+    } catch (e) { 
+        if (e.response && e.response.status === 400 && e.response.data.warning) {
+            setHighLoadError(e.response.data.warning);
+        } else {
+            alert('Hata oluştu'); 
+        }
+    }
   };
 
   const handleGradeSubmit = async (id) => {
@@ -157,7 +198,19 @@ const TeacherPanel = () => {
 
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem' }}>
-      {warning && (
+      
+      {/* High Load Error Toast */}
+      {highLoadError && (
+          <div className="animate-fade-in" style={{ background: '#fef2f2', borderLeft: '4px solid #ef4444', color: '#991b1b', padding: '1rem', borderRadius: '8px', marginBottom: '2rem', display: 'flex', gap: '1rem', alignItems: 'center', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
+              <AlertTriangle size={24} color="#ef4444" />
+              <div>
+                  <strong style={{ display: 'block', fontSize: '1.1rem', marginBottom: '4px' }}>Yüksek Ödev Yükü Uyarı Logu</strong>
+                  {highLoadError}
+              </div>
+          </div>
+      )}
+
+      {warning && !highLoadError && (
         <div className="warning-banner animate-fade-in"><AlertTriangle size={24} /> DİKKAT: Yüksek Ödev Yükü ({totalLoad} dk)</div>
       )}
 
@@ -170,41 +223,83 @@ const TeacherPanel = () => {
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', borderBottom: '1px solid var(--glass-border)', paddingBottom: '1rem' }}>
+        <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', borderBottom: '1px solid var(--glass-border)', paddingBottom: '1rem', flexWrap: 'wrap' }}>
+          <button onClick={() => setActiveTab('classes')} className={`btn-primary ${activeTab !== 'classes' ? 'outline' : ''}`} style={{ background: activeTab === 'classes' ? '' : 'transparent', color: activeTab === 'classes' ? '' : 'var(--text-dark)' }}>Sınıflarım</button>
           <button onClick={() => setActiveTab('homeworks')} className={`btn-primary ${activeTab !== 'homeworks' ? 'outline' : ''}`} style={{ background: activeTab === 'homeworks' ? '' : 'transparent', color: activeTab === 'homeworks' ? '' : 'var(--text-dark)' }}>Ödev & Notlandırma</button>
           <button onClick={() => setActiveTab('analytics')} className={`btn-primary ${activeTab !== 'analytics' ? 'outline' : ''}`} style={{ background: activeTab === 'analytics' ? '' : 'transparent', color: activeTab === 'analytics' ? '' : 'var(--text-dark)' }}>Analiz & Takvim</button>
           <button onClick={() => setActiveTab('messages')} className={`btn-primary ${activeTab !== 'messages' ? 'outline' : ''}`} style={{ background: activeTab === 'messages' ? '' : 'transparent', color: activeTab === 'messages' ? '' : 'var(--text-dark)' }}>Mesajlar</button>
         </div>
 
+        {activeTab === 'classes' && (
+            <div className="animate-fade-in card">
+                <h3><Users size={20} style={{ verticalAlign: 'middle', marginRight: '8px' }} /> Sınıflarım</h3>
+                <form onSubmit={handleAddClass} style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
+                    <input type="text" className="input-field" placeholder="Yeni Sınıf Adı (Örn: 9-A)" value={newClassName} onChange={e => setNewClassName(e.target.value)} required />
+                    <button type="submit" className="btn-primary" style={{ width: 'auto' }}>Yeni Sınıf Ekle</button>
+                </form>
+                <table className="glass-table">
+                    <thead><tr><th>ID</th><th>Sınıf Adı</th></tr></thead>
+                    <tbody>
+                        {classes.length === 0 ? <tr><td colSpan="2">Sınıf bulunamadı.</td></tr> : classes.map(c => (
+                            <tr key={c.id}><td>{c.id}</td><td>{c.ad}</td></tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        )}
+
         {activeTab === 'homeworks' && (
           <div className="animate-fade-in">
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', alignItems: 'center' }}>
               <h3><GraduationCap size={20} style={{ verticalAlign: 'middle' }} /> Verilen Ödevler</h3>
-              <button className="btn-primary" style={{ width: 'auto' }} onClick={() => setShowForm(!showForm)}>Yeni Ödev Ata</button>
+              <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                  <select className="input-field" style={{ width: 'auto', margin: 0, padding: '0.4rem 1rem' }} value={selectedClassId} onChange={e => { setSelectedClassId(e.target.value); fetchHomeworks(); }}>
+                      <option value="1">Sınıf Seçin (Varsayılan: 1)</option>
+                      {classes.map(c => <option key={c.id} value={c.id}>{c.ad}</option>)}
+                  </select>
+                  <button className="btn-primary" style={{ width: 'auto' }} onClick={() => setShowForm(!showForm)}>Yeni Ödev Ata</button>
+              </div>
             </div>
 
             {showForm && (
-              <form onSubmit={handleHomeworkSubmit} style={{ background: 'rgba(255,255,255,0.4)', padding: '1rem', borderRadius: '8px', marginBottom: '1rem' }}>
-                <input type="text" className="input-field" placeholder="Başlık" value={baslik} onChange={e => setBaslik(e.target.value)} required />
-                <textarea className="input-field" placeholder="Açıklama" value={aciklama} onChange={e => setAciklama(e.target.value)} required />
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                  <input type="number" className="input-field" placeholder="Süre (Dk)" value={sureDakika} onChange={e => setSureDakika(e.target.value)} required />
-                  <input type="date" className="input-field" value={teslimTarihi} onChange={e => setTeslimTarihi(e.target.value)} required />
-                </div>
-                <input type="file" onChange={e => setDosya(e.target.files[0])} style={{ margin: '1rem 0' }} />
-                <button type="submit" className="btn-primary" style={{ width: 'auto' }}>Gönder</button>
-              </form>
+              <div style={{ background: 'rgba(255,255,255,0.6)', padding: '1.5rem', borderRadius: '12px', marginBottom: '2rem', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
+                  <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <h4 style={{ margin: 0, color: 'var(--text-dark)' }}>Yeni Ödev Detayları</h4>
+                      <div style={{ background: totalLoad > 90 ? 'var(--warning)' : '#e2e8f0', color: totalLoad > 90 ? 'white' : 'var(--text-dark)', padding: '0.4rem 1rem', borderRadius: '20px', fontSize: '0.9rem', fontWeight: '500' }}>
+                          Sınıfın O Günkü Ödev Yükü: {totalLoad} dk
+                      </div>
+                  </div>
+                  <form onSubmit={handleHomeworkSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <input type="text" className="input-field" placeholder="Başlık" value={baslik} onChange={e => setBaslik(e.target.value)} required />
+                    <textarea className="input-field" placeholder="Açıklama" value={aciklama} onChange={e => setAciklama(e.target.value)} required />
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                        <div>
+                            <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px', color: 'var(--text-muted)' }}>Tahmini Süre (Dk) *</label>
+                            <input type="number" className="input-field" placeholder="Süre (Dk)" value={estimatedDuration} onChange={e => setEstimatedDuration(e.target.value)} required />
+                        </div>
+                        <div>
+                            <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px', color: 'var(--text-muted)' }}>Teslim Tarihi *</label>
+                            <input type="date" className="input-field" value={teslimTarihi} onChange={e => setTeslimTarihi(e.target.value)} required />
+                        </div>
+                    </div>
+                    <button type="submit" className="btn-primary" style={{ width: '200px', alignSelf: 'flex-end' }}>Gönder</button>
+                  </form>
+              </div>
             )}
 
             <table className="glass-table">
               <thead><tr><th>Başlık</th><th>Süre</th><th>Teslim Tarihi</th><th>İşlem</th></tr></thead>
               <tbody>
-                {homeworks.map(h => (
-                  <tr key={h.id}>
-                    <td>{h.baslik}</td><td>{h.sure_dakika} dk</td><td>{h.teslim_tarihi}</td>
-                    <td><button className="btn-primary" style={{ width: 'auto', padding: '0.4rem 1rem' }} onClick={() => fetchSubmissions(h.id)}>Teslimler</button></td>
-                  </tr>
-                ))}
+                {homeworks.map(h => {
+                    const isPassed = new Date(h.teslim_tarihi) < new Date();
+                    return (
+                      <tr key={h.id} style={{ borderLeft: isPassed ? '4px solid #ef4444' : '4px solid #10b981' }}>
+                        <td>{h.baslik}</td><td>{h.EstimatedDuration} dk</td>
+                        <td style={{ color: isPassed ? '#ef4444' : 'inherit' }}>{new Date(h.teslim_tarihi).toLocaleDateString('tr-TR')}</td>
+                        <td><button className="btn-primary" style={{ width: 'auto', padding: '0.4rem 1rem' }} onClick={() => fetchSubmissions(h.id)}>Teslimler</button></td>
+                      </tr>
+                    );
+                })}
               </tbody>
             </table>
 
@@ -219,11 +314,12 @@ const TeacherPanel = () => {
                 </div>
                 {submissions.length === 0 ? <p>Teslim yok.</p> : (
                   <table className="glass-table" style={{ background: 'transparent' }}>
-                    <thead><tr><th>Öğrenci</th><th>Not</th><th>Geri Bildirim</th><th>Kaydet</th></tr></thead>
+                    <thead><tr><th>Öğrenci</th><th>Öğrenci Yanıtı</th><th>Not</th><th>Geri Bildirim</th><th>Kaydet</th></tr></thead>
                     <tbody>
                       {submissions.map(s => (
-                        <tr key={s.id}>
+                        <tr key={s.id} style={{ borderLeft: '4px solid #10b981' }}>
                           <td>{s.ogrenci_adi}</td>
+                          <td style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={s.yanit_metni}>{s.yanit_metni || '-'}</td>
                           <td><input type="number" className="input-field" value={gradeData[s.id]?.not_degeri} onChange={e => setGradeData({ ...gradeData, [s.id]: { ...gradeData[s.id], not_degeri: e.target.value } })} style={{ width: '80px' }} /></td>
                           <td><input type="text" className="input-field" value={gradeData[s.id]?.ogretmen_notu} onChange={e => setGradeData({ ...gradeData, [s.id]: { ...gradeData[s.id], ogretmen_notu: e.target.value } })} /></td>
                           <td><button className="btn-primary" style={{ width: 'auto' }} onClick={() => handleGradeSubmit(s.id)}>Ver</button></td>
@@ -259,9 +355,9 @@ const TeacherPanel = () => {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.5rem', marginTop: '1rem' }}>
                 {['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'].map(d => <div key={d} style={{ textAlign: 'center', fontWeight: '600', fontSize: '0.85rem', color: 'var(--text-muted)' }}>{d}</div>)}
                 {Array.from({ length: 14 }).map((_, i) => (
-                  <div key={i} style={{ padding: '0.5rem', background: i === 3 ? 'var(--danger)' : '#f8fafc', color: i === 3 ? 'white' : 'inherit', borderRadius: '8px', minHeight: '60px', display: 'flex', flexDirection: 'column', fontSize: '0.9rem' }}>
+                  <div key={i} style={{ padding: '0.5rem', background: i === 3 ? '#fbbf24' : '#f8fafc', color: i === 3 ? 'white' : 'inherit', borderRadius: '8px', minHeight: '60px', display: 'flex', flexDirection: 'column', fontSize: '0.9rem' }}>
                     <span style={{ fontWeight: '500' }}>{i + 1}</span>
-                    {i === 3 && <div style={{ fontSize: '0.7rem', marginTop: 'auto', background: 'rgba(0,0,0,0.2)', padding: '2px 4px', borderRadius: '4px' }}>Matematik</div>}
+                    {i === 3 && <div style={{ fontSize: '0.7rem', marginTop: 'auto', background: 'rgba(0,0,0,0.2)', padding: '2px 4px', borderRadius: '4px' }}>Yaklaşan Teslim</div>}
                   </div>
                 ))}
               </div>

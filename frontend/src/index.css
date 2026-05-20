@@ -91,7 +91,7 @@ body {
 /* Typography & General Styling */
 h1 { font-size: 1.875rem; font-weight: 700; color: var(--text-dark); margin-bottom: 0.5rem; }
 h2 { font-size: 1.5rem; font-weight: 600; color: var(--text-dark); margin-bottom: 1rem; }
-h3 { font-size: 1.25rem; font-weight: 600; color: var(--text-dark); margin-bottom: 1rem; display: flex; alignItems: center; gap: 8px;}
+h3 { font-size: 1.25rem; font-weight: 600; color: var(--text-dark); margin-bottom: 1rem; display: flex; align-items: center; gap: 8px;}
 
 p.subtitle {
   color: var(--text-muted);
@@ -227,6 +227,8 @@ p.subtitle {
 .row-danger { background: rgba(239, 68, 68, 0.02) !important; }
 .row-danger:hover { background: rgba(239, 68, 68, 0.06) !important; }
 .status-badge.danger { background: rgba(239, 68, 68, 0.1); color: #991b1b; border: 1px solid rgba(239, 68, 68, 0.2); }
+
+.status-badge.warning { background: rgba(245, 158, 11, 0.1); color: #b45309; border: 1px solid rgba(245, 158, 11, 0.2); }
 
 /* Dashboard Headers */
 .dashboard-header {

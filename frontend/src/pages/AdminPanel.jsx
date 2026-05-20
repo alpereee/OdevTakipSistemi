@@ -8,23 +8,18 @@ const AdminPanel = () => {
   const [activeTab, setActiveTab] = useState('users'); // users, lessons, announcements, settings, schools
   const [users, setUsers] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
-  const [schools, setSchools] = useState([]);
   const navigate = useNavigate();
 
   // Form States
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [roleId, setRoleId] = useState('');
-  const [lessonName, setLessonName] = useState('');
-  const [schoolName, setSchoolName] = useState('');
-  const [schoolAddress, setSchoolAddress] = useState('');
   const [annTitle, setAnnTitle] = useState('');
   const [annContent, setAnnContent] = useState('');
 
   useEffect(() => {
     if (activeTab === 'users') fetchUsers();
     if (activeTab === 'announcements') fetchAnnouncements();
-    if (activeTab === 'schools') fetchSchools();
   }, [activeTab]);
 
   const fetchUsers = async () => {
@@ -39,13 +34,6 @@ const AdminPanel = () => {
       const res = await axios.get('https://odevtakipsistemi.onrender.com/api/announcements', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       setAnnouncements(Array.isArray(res.data) ? res.data : (res.data?.data || []));
     } catch (e) { console.error(e); setAnnouncements([]); }
-  };
-
-  const fetchSchools = async () => {
-    try {
-      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/schools', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
-      setSchools(Array.isArray(res.data) ? res.data : (res.data?.data || []));
-    } catch (e) { console.error(e); setSchools([]); }
   };
 
   const handleLogout = () => {
@@ -67,25 +55,6 @@ const AdminPanel = () => {
     try {
       await axios.delete(`https://odevtakipsistemi.onrender.com/api/users/${id}`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       fetchUsers();
-    } catch (e) { alert('Hata'); }
-  };
-
-  const handleAddLesson = async (e) => {
-    e.preventDefault();
-    try {
-      await axios.post('https://odevtakipsistemi.onrender.com/api/lessons', { ad: lessonName }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
-      alert('Ders eklendi');
-      setLessonName('');
-    } catch (e) { alert('Hata'); }
-  };
-
-  const handleAddSchool = async (e) => {
-    e.preventDefault();
-    try {
-      await axios.post('https://odevtakipsistemi.onrender.com/api/schools', { ad: schoolName, adres: schoolAddress }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
-      alert('Okul eklendi');
-      setSchoolName(''); setSchoolAddress('');
-      fetchSchools();
     } catch (e) { alert('Hata'); }
   };
 
@@ -123,8 +92,6 @@ const AdminPanel = () => {
         {/* Sekmeler */}
         <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', borderBottom: '1px solid var(--glass-border)', paddingBottom: '1rem', flexWrap: 'wrap' }}>
           <button onClick={() => setActiveTab('users')} className={`btn-primary ${activeTab !== 'users' ? 'outline' : ''}`} style={{ background: activeTab === 'users' ? '' : 'transparent', color: activeTab === 'users' ? '' : 'var(--text-dark)' }}>Kullanıcılar</button>
-          <button onClick={() => setActiveTab('schools')} className={`btn-primary ${activeTab !== 'schools' ? 'outline' : ''}`} style={{ background: activeTab === 'schools' ? '' : 'transparent', color: activeTab === 'schools' ? '' : 'var(--text-dark)' }}>Okullar</button>
-          <button onClick={() => setActiveTab('lessons')} className={`btn-primary ${activeTab !== 'lessons' ? 'outline' : ''}`} style={{ background: activeTab === 'lessons' ? '' : 'transparent', color: activeTab === 'lessons' ? '' : 'var(--text-dark)' }}>Dersler</button>
           <button onClick={() => setActiveTab('announcements')} className={`btn-primary ${activeTab !== 'announcements' ? 'outline' : ''}`} style={{ background: activeTab === 'announcements' ? '' : 'transparent', color: activeTab === 'announcements' ? '' : 'var(--text-dark)' }}>Duyurular</button>
           <button onClick={() => setActiveTab('settings')} className={`btn-primary ${activeTab !== 'settings' ? 'outline' : ''}`} style={{ background: activeTab === 'settings' ? '' : 'transparent', color: activeTab === 'settings' ? '' : 'var(--text-dark)' }}>Ayarlar</button>
         </div>
@@ -153,38 +120,6 @@ const AdminPanel = () => {
                 ))}
               </tbody>
             </table>
-          </div>
-        )}
-
-        {activeTab === 'schools' && (
-          <div className="animate-fade-in card">
-            <h3><Building2 size={20} /> Kurum / Okul Tanımla</h3>
-            <form onSubmit={handleAddSchool} style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
-              <input type="text" placeholder="Okul Adı" className="input-field" value={schoolName} onChange={e => setSchoolName(e.target.value)} required />
-              <input type="text" placeholder="Adres (Opsiyonel)" className="input-field" value={schoolAddress} onChange={e => setSchoolAddress(e.target.value)} />
-              <button type="submit" className="btn-primary" style={{ width: 'auto' }}>Kaydet</button>
-            </form>
-
-            <table className="glass-table">
-              <thead><tr><th>ID</th><th>Okul Adı</th><th>Adres</th></tr></thead>
-              <tbody>
-                {schools.map(s => (
-                  <tr key={s.id}>
-                    <td>{s.id}</td><td>{s.ad}</td><td>{s.adres || '-'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {activeTab === 'lessons' && (
-          <div className="animate-fade-in card">
-            <h3><BookOpen size={20} /> Ders / Bölüm Tanımla</h3>
-            <form onSubmit={handleAddLesson} style={{ display: 'flex', gap: '1rem' }}>
-              <input type="text" placeholder="Ders Adı" className="input-field" value={lessonName} onChange={e => setLessonName(e.target.value)} required />
-              <button type="submit" className="btn-primary" style={{ width: 'auto' }}>Kaydet</button>
-            </form>
           </div>
         )}
 

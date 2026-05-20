@@ -44,19 +44,13 @@ function initDb() {
             sinif_id INTEGER NOT NULL,
             baslik TEXT NOT NULL,
             aciklama TEXT,
-            dosya_yolu TEXT,
             teslim_tarihi DATETIME,
             durum TEXT DEFAULT 'bekliyor' CHECK(durum IN ('bekliyor', 'gonderildi')),
-            sure_dakika INTEGER NOT NULL,
+            EstimatedDuration INTEGER NOT NULL DEFAULT 60,
             olusturma_tarihi DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (ders_id) REFERENCES dersler (id),
             FOREIGN KEY (ogretmen_id) REFERENCES users (id)
-        )`, () => {
-            // Hali hazırda tablo varsa ve aciklama sütunu yoksa eklemeyi dene
-            db.run(`ALTER TABLE odevler ADD COLUMN aciklama TEXT`, (err) => {
-                // Sütun zaten varsa hata döner, yoksayabiliriz
-            });
-        });
+        )`);
 
         // Geri Bildirim Tablosu
         db.run(`CREATE TABLE IF NOT EXISTS geri_bildirimler (
@@ -72,7 +66,7 @@ function initDb() {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             odev_id INTEGER NOT NULL,
             ogrenci_id INTEGER NOT NULL,
-            dosya_yolu TEXT,
+            yanit_metni TEXT,
             not_degeri INTEGER,
             ogretmen_notu TEXT,
             teslim_tarihi DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -108,6 +102,14 @@ function initDb() {
             ad TEXT NOT NULL,
             adres TEXT,
             tarih DATETIME DEFAULT CURRENT_TIMESTAMP
+        )`);
+
+        // Sınıflar Tablosu
+        db.run(`CREATE TABLE IF NOT EXISTS siniflar (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            ad TEXT NOT NULL,
+            ogretmen_id INTEGER NOT NULL,
+            FOREIGN KEY (ogretmen_id) REFERENCES users (id)
         )`);
 
         // Devamsızlıklar Tablosu

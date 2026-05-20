@@ -7,14 +7,4 @@ const getSchools = (req, res) => {
     });
 };
 
-const createSchool = (req, res) => {
-    const { ad, adres } = req.body;
-    if (!ad) return res.status(400).json({ message: 'Okul adı zorunludur.' });
-
-    db.run(`INSERT INTO okullar (ad, adres) VALUES (?, ?)`, [ad, adres], function(err) {
-        if (err) return res.status(500).json({ message: 'Okul eklenemedi.' });
-        res.status(201).json({ message: 'Okul eklendi.', id: this.lastID });
-    });
-};
-
-module.exports = { getSchools, createSchool };
+module.exports = { getSchools };

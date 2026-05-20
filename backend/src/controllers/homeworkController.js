@@ -1,22 +1,37 @@
 const db = require('../config/database');
 
 const createHomework = (req, res) => {
-    const { ders_id, sinif_id, baslik, aciklama, teslim_tarihi, sure_dakika } = req.body;
+    const { ders_id, sinif_id, baslik, aciklama, teslim_tarihi, EstimatedDuration } = req.body;
     const ogretmen_id = req.userId; // Middleware'den gelecek
-    const dosya_yolu = req.file ? req.file.path : null;
 
-    if (!ders_id || !sinif_id || !baslik || !sure_dakika) {
-        return res.status(400).json({ message: 'Lütfen ders_id, sinif_id, baslik ve sure_dakika alanlarını doldurun.' });
+    if (!ders_id || !sinif_id || !baslik || EstimatedDuration === undefined || EstimatedDuration === null) {
+        return res.status(400).json({ message: 'Lütfen ders_id, sinif_id, baslik ve EstimatedDuration alanlarını doldurun.' });
     }
 
-    const query = `INSERT INTO odevler (ders_id, ogretmen_id, sinif_id, baslik, aciklama, dosya_yolu, teslim_tarihi, sure_dakika) 
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-
-    db.run(query, [ders_id, ogretmen_id, sinif_id, baslik, aciklama, dosya_yolu, teslim_tarihi, sure_dakika], function(err) {
+    // Günlük Ödev Yükü Algoritması: Aynı sınıfa ve aynı teslim tarihine sahip ödevlerin toplam süresini bul
+    const loadQuery = `SELECT SUM(EstimatedDuration) as total_duration FROM odevler WHERE sinif_id = ? AND teslim_tarihi = ?`;
+    
+    db.get(loadQuery, [sinif_id, teslim_tarihi], (err, row) => {
         if (err) {
-            return res.status(500).json({ message: 'Ödev eklenirken hata oluştu', error: err.message });
+            return res.status(500).json({ message: 'Ödev yükü hesaplanırken hata oluştu', error: err.message });
         }
-        res.status(201).json({ message: 'Ödev başarıyla eklendi', id: this.lastID });
+
+        const currentTotal = row.total_duration || 0;
+        const newTotal = parseInt(currentTotal) + parseInt(EstimatedDuration);
+
+        if (newTotal > 120) {
+            return res.status(400).json({ warning: `Günlük maksimum ödev süresi aşıldı! (Mevcut: ${currentTotal} dk, Yeni Toplam: ${newTotal} dk. Max: 120 dk)` });
+        }
+
+        const query = `INSERT INTO odevler (ders_id, ogretmen_id, sinif_id, baslik, aciklama, teslim_tarihi, EstimatedDuration) 
+                       VALUES (?, ?, ?, ?, ?, ?, ?)`;
+
+        db.run(query, [ders_id, ogretmen_id, sinif_id, baslik, aciklama, teslim_tarihi, EstimatedDuration], function(err) {
+            if (err) {
+                return res.status(500).json({ message: 'Ödev eklenirken hata oluştu', error: err.message });
+            }
+            res.status(201).json({ message: 'Ödev başarıyla eklendi', id: this.lastID });
+        });
     });
 };
 
@@ -104,10 +119,34 @@ const getHomeworksByStudent = (req, res) => {
     });
 };
 
+const submitHomework = (req, res) => {
+    const { odev_id } = req.params;
+    const { yanit_metni } = req.body;
+    const ogrenci_id = req.userId;
+
+    if (!yanit_metni) {
+        return res.status(400).json({ message: 'Lütfen bir yanıt metni girin.' });
+    }
+
+    const query = `INSERT INTO odev_teslimleri (odev_id, ogrenci_id, yanit_metni) VALUES (?, ?, ?)`;
+
+    db.run(query, [odev_id, ogrenci_id, yanit_metni], function(err) {
+        if (err) {
+            return res.status(500).json({ message: 'Ödev teslimi sırasında hata oluştu', error: err.message });
+        }
+        
+        // Ödev durumunu "gonderildi" olarak güncelle (Opsiyonel ama mantıklı)
+        db.run(`UPDATE odevler SET durum = 'gonderildi' WHERE id = ?`, [odev_id], () => {
+            res.status(201).json({ message: 'Ödev başarıyla teslim edildi', id: this.lastID });
+        });
+    });
+};
+
 module.exports = {
     createHomework,
     getHomeworksByClass,
     getSubmissionsByHomework,
     gradeSubmission,
-    getHomeworksByStudent
+    getHomeworksByStudent,
+    submitHomework
 };

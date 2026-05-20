@@ -15,10 +15,10 @@ const getHomeworkLoad = (req, res) => {
         targetDate = today.toISOString().split('T')[0];
     }
 
-    // Belirtilen sınıfa ait ve oluşturulma tarihi hedef tarih olan ödevlerin sure_dakika toplamını al
+    // Belirtilen sınıfa ait ve oluşturulma tarihi hedef tarih olan ödevlerin EstimatedDuration toplamını al
     // olusturma_tarihi datetime olduğu için date(olusturma_tarihi) fonksiyonunu kullanarak sadece tarihi karşılaştırıyoruz.
     const query = `
-        SELECT SUM(sure_dakika) as toplam_sure 
+        SELECT SUM(EstimatedDuration) as toplam_sure 
         FROM odevler 
         WHERE sinif_id = ? AND date(olusturma_tarihi) = ?
     `;
@@ -35,7 +35,7 @@ const getHomeworkLoad = (req, res) => {
             toplam_sure_dakika: toplamSure
         };
 
-        if (toplamSure > 60) {
+        if (toplamSure > 120) {
             response.warning = 'Yüksek Ödev Yükü';
         }
 

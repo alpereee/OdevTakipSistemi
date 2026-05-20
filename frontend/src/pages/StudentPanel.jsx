@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { LogOut, BookOpen, Clock, Megaphone, MessageCircle, Send, Trophy, Star } from 'lucide-react';
+import { LogOut, BookOpen, Clock, Megaphone, MessageCircle, Send, Trophy, Star, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import NotificationBell from '../components/NotificationBell';
 
@@ -12,6 +12,11 @@ const StudentPanel = () => {
   const [messages, setMessages] = useState([]);
   const [msgTo, setMsgTo] = useState('');
   const [msgText, setMsgText] = useState('');
+  
+  // Submit states
+  const [activeHomeworkSubmit, setActiveHomeworkSubmit] = useState(null);
+  const [yanitMetni, setYanitMetni] = useState('');
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -63,6 +68,20 @@ const StudentPanel = () => {
       await axios.post('https://odevtakipsistemi.onrender.com/api/messages/send', { alici_id: msgTo, mesaj: msgText }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       alert('Mesaj gönderildi'); setMsgText('');
     } catch (e) { alert('Hata'); }
+  };
+
+  const handleHomeworkSubmit = async (e, odev_id) => {
+      e.preventDefault();
+      try {
+          await axios.post(`https://odevtakipsistemi.onrender.com/api/homeworks/${odev_id}/submit`, 
+              { yanit_metni: yanitMetni }, 
+              { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
+          );
+          alert('Ödev başarıyla teslim edildi!');
+          setYanitMetni('');
+          setActiveHomeworkSubmit(null);
+          fetchHomeworks(); // Refresh status
+      } catch (e) { alert('Teslim sırasında bir hata oluştu.'); }
   };
 
   const handleLogout = () => { localStorage.removeItem('token'); navigate('/login'); };
@@ -125,22 +144,54 @@ const StudentPanel = () => {
 
         {activeTab === 'homeworks' && (
           <div className="animate-fade-in card">
-            <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1rem' }}><BookOpen size={20} color="var(--primary-color)" /> Ödev Listesi (Sınıf 1)</h3>
+            <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '1rem' }}><BookOpen size={20} color="var(--primary-color)" /> Ödev Listesi</h3>
             <div className="table-container">
               <table className="glass-table">
-                <thead><tr><th>Ders</th><th>Başlık</th><th>Öğretmen</th><th>Süre</th><th>Teslim</th><th>Durum</th></tr></thead>
+                <thead><tr><th>Ders</th><th>Başlık</th><th>Öğretmen</th><th>Süre</th><th>Teslim</th><th>Durum</th><th>İşlem</th></tr></thead>
                 <tbody>
-                  {homeworks.map(hw => (
-                    <tr key={hw.id} className={hw.durum === 'gonderildi' ? 'row-success' : 'row-danger'}>
-                      <td>{hw.ders_adi}</td><td>{hw.baslik}</td><td>{hw.ogretmen_adi}</td>
-                      <td><Clock size={14} style={{ verticalAlign: 'middle' }} /> {hw.sure_dakika} dk</td>
-                      <td>{hw.teslim_tarihi}</td>
-                      <td><span className={`status-badge ${hw.durum === 'gonderildi' ? 'success' : 'danger'}`}>{hw.durum === 'gonderildi' ? 'Gönderildi' : 'Bekliyor'}</span></td>
-                    </tr>
-                  ))}
+                  {homeworks.map(hw => {
+                      const isPassed = new Date(hw.teslim_tarihi) < new Date();
+                      const isCompleted = hw.durum === 'gonderildi';
+                      
+                      return (
+                        <tr key={hw.id} style={{ borderLeft: isCompleted ? '4px solid #10b981' : (isPassed ? '4px solid #ef4444' : '4px solid #fbbf24'), background: isCompleted ? 'rgba(16, 185, 129, 0.05)' : (isPassed ? 'rgba(239, 68, 68, 0.05)' : 'inherit') }}>
+                          <td>{hw.ders_adi}</td><td>{hw.baslik}</td><td>{hw.ogretmen_adi}</td>
+                          <td><Clock size={14} style={{ verticalAlign: 'middle' }} /> {hw.EstimatedDuration} dk</td>
+                          <td style={{ color: isPassed && !isCompleted ? '#ef4444' : 'inherit' }}>{new Date(hw.teslim_tarihi).toLocaleDateString('tr-TR')}</td>
+                          <td><span className={`status-badge ${isCompleted ? 'success' : (isPassed ? 'danger' : 'warning')}`}>{isCompleted ? 'Tamamlandı' : (isPassed ? 'Süresi Geçti' : 'Bekliyor')}</span></td>
+                          <td>
+                              {!isCompleted && (
+                                  <button className="btn-primary" style={{ padding: '0.3rem 0.8rem', fontSize: '0.85rem' }} onClick={() => setActiveHomeworkSubmit(hw.id === activeHomeworkSubmit ? null : hw.id)}>
+                                      {activeHomeworkSubmit === hw.id ? 'İptal' : 'Teslim Et'}
+                                  </button>
+                              )}
+                          </td>
+                        </tr>
+                      );
+                  })}
                 </tbody>
               </table>
             </div>
+            
+            {/* Submit Form */}
+            {activeHomeworkSubmit && (
+                <div style={{ marginTop: '2rem', padding: '1.5rem', background: 'rgba(255,255,255,0.8)', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', border: '1px solid var(--glass-border)' }}>
+                    <h4 style={{ marginBottom: '1rem', color: 'var(--text-dark)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <CheckCircle2 size={20} color="var(--primary-color)" /> Yanıtını Gir
+                    </h4>
+                    <form onSubmit={(e) => handleHomeworkSubmit(e, activeHomeworkSubmit)} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        <textarea 
+                            className="input-field" 
+                            rows="4" 
+                            placeholder="Ödevinizi veya yanıtınızı buraya yazınız..." 
+                            value={yanitMetni} 
+                            onChange={(e) => setYanitMetni(e.target.value)} 
+                            required 
+                        />
+                        <button type="submit" className="btn-primary" style={{ alignSelf: 'flex-start' }}>Ödevi Tamamlandı Olarak İşaretle</button>
+                    </form>
+                </div>
+            )}
           </div>
         )}
 
