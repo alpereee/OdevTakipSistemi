@@ -183,6 +183,7 @@ module.exports = {
     getCommonData,
     getAllUsers,
     createUser,
+    deleteUser,
     updateUserRole,
     getRecipients,
     getMe,
