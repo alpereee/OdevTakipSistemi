@@ -54,8 +54,8 @@ const getHomeworksByClass = (req, res) => {
 
     const query = `SELECT o.*, d.ad as ders_adi, u.username as ogretmen_adi 
                    FROM odevler o 
-                   JOIN dersler d ON o.ders_id = d.id 
-                   JOIN users u ON o.ogretmen_id = u.id 
+                   LEFT JOIN dersler d ON o.ders_id = d.id 
+                   LEFT JOIN users u ON o.ogretmen_id = u.id 
                    WHERE o.sinif_id = ?`;
 
     db.all(query, [sinif_id], (err, rows) => {
@@ -125,8 +125,8 @@ const getHomeworksByStudent = (req, res) => {
         SELECT o.*, d.ad as ders_adi, u.username as ogretmen_adi, 
                t.not_degeri, t.ogretmen_notu, t.teslim_tarihi as teslim_edilen_tarih, t.id as teslim_id
         FROM odevler o 
-        JOIN dersler d ON o.ders_id = d.id 
-        JOIN users u ON o.ogretmen_id = u.id 
+        LEFT JOIN dersler d ON o.ders_id = d.id 
+        LEFT JOIN users u ON o.ogretmen_id = u.id 
         JOIN users ogrenci ON ogrenci.id = ? AND ogrenci.sinif_id = o.sinif_id
         LEFT JOIN odev_teslimleri t ON o.id = t.odev_id AND t.ogrenci_id = ?
     `;
