@@ -144,6 +144,20 @@ function initDb() {
             });
         });
 
+        // Ayarlar Tablosu
+        db.run(`CREATE TABLE IF NOT EXISTS settings (
+            id INTEGER PRIMARY KEY CHECK (id = 1),
+            school_name TEXT NOT NULL DEFAULT 'Ödev Takip Sistemi',
+            education_term TEXT NOT NULL DEFAULT '2025-2026',
+            system_status TEXT NOT NULL DEFAULT 'Aktif'
+        )`, () => {
+            db.get("SELECT COUNT(*) as count FROM settings", [], (err, row) => {
+                if (row && row.count === 0) {
+                    db.run("INSERT INTO settings (id, school_name, education_term, system_status) VALUES (1, 'Ödev Takip Sistemi', '2025-2026', 'Aktif')");
+                }
+            });
+        });
+
         // Rolleri ekle (Eğer yoksa)
         const roles = [
             { id: 1, name: 'Yönetici' },

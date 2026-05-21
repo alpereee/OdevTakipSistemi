@@ -17,9 +17,15 @@ const AdminPanel = () => {
   const [annTitle, setAnnTitle] = useState('');
   const [annContent, setAnnContent] = useState('');
 
+  // Settings States
+  const [schoolName, setSchoolName] = useState('');
+  const [educationTerm, setEducationTerm] = useState('');
+  const [systemStatus, setSystemStatus] = useState('Aktif');
+
   useEffect(() => {
     if (activeTab === 'users') fetchUsers();
     if (activeTab === 'announcements') fetchAnnouncements();
+    if (activeTab === 'settings') fetchSettings();
   }, [activeTab]);
 
   const fetchUsers = async () => {
@@ -73,6 +79,29 @@ const AdminPanel = () => {
       await axios.delete(`https://odevtakipsistemi.onrender.com/api/announcements/${id}`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       fetchAnnouncements();
     } catch (e) { alert('Hata'); }
+  };
+
+  const fetchSettings = async () => {
+    try {
+      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/settings', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      if (res.data) {
+        setSchoolName(res.data.school_name || '');
+        setEducationTerm(res.data.education_term || '');
+        setSystemStatus(res.data.system_status || 'Aktif');
+      }
+    } catch (e) { console.error(e); }
+  };
+
+  const handleSaveSettings = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.post('https://odevtakipsistemi.onrender.com/api/settings', {
+        school_name: schoolName,
+        education_term: educationTerm,
+        system_status: systemStatus
+      }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
+      alert('Ayarlar başarıyla kaydedildi!');
+    } catch (e) { alert('Ayarlar kaydedilirken hata oluştu.'); }
   };
 
   return (
@@ -145,11 +174,26 @@ const AdminPanel = () => {
         )}
 
         {activeTab === 'settings' && (
-          <div className="animate-fade-in card" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-            <Settings size={48} style={{ opacity: 0.5, marginBottom: '1rem' }} />
-            <h3>Genel Yapılandırmalar</h3>
-            <p>Sistem genel ayarları (okul adı, logo, dönem tarihleri) buradan yapılandırılabilir.</p>
-            <p><em>(Bu özellik yakında eklenecektir.)</em></p>
+          <div className="animate-fade-in card">
+            <h3><Settings size={20} /> Genel Yapılandırmalar</h3>
+            <form onSubmit={handleSaveSettings} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem', maxWidth: '500px' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Okul Adı</label>
+                <input type="text" className="input-field" value={schoolName} onChange={e => setSchoolName(e.target.value)} required />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Eğitim Dönemi (Örn: 2025-2026)</label>
+                <input type="text" className="input-field" value={educationTerm} onChange={e => setEducationTerm(e.target.value)} required />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>Sistem Durumu</label>
+                <select className="input-field" value={systemStatus} onChange={e => setSystemStatus(e.target.value)} required>
+                  <option value="Aktif">Aktif</option>
+                  <option value="Bakımda">Bakımda</option>
+                </select>
+              </div>
+              <button type="submit" className="btn-primary" style={{ marginTop: '1rem' }}>Kaydet</button>
+            </form>
           </div>
         )}
 

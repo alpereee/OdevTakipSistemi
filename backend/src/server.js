@@ -29,6 +29,7 @@ app.use('/api/schools', require('./routes/schoolRoutes'));
 app.use('/api/attendance', require('./routes/attendanceRoutes'));
 app.use('/api/classes', require('./routes/classRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
+app.use('/api/settings', require('./routes/settingsRoutes'));
 
 // GEÇİCİ SEED ROTASI (Canlı sunucuda test verisi oluşturmak için)
 app.get('/api/run-seed', async (req, res) => {

@@ -6,23 +6,46 @@ import NotificationBell from '../components/NotificationBell';
 
 const ParentPanel = () => {
   const [activeTab, setActiveTab] = useState('academic'); // academic, attendance
+  const [students, setStudents] = useState([]);
+  const [selectedStudentId, setSelectedStudentId] = useState('');
   const [homeworks, setHomeworks] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState('');
   const [feedbackSuccess, setFeedbackSuccess] = useState('');
   const [attendance, setAttendance] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchHomeworks();
-    fetchAttendance();
+    fetchStudents();
   }, []);
 
-  const fetchHomeworks = async () => {
+  useEffect(() => {
+    if (selectedStudentId) {
+      fetchHomeworks(selectedStudentId);
+      fetchAttendance(selectedStudentId);
+    } else {
+      setHomeworks([]);
+      setAttendance([]);
+    }
+  }, [selectedStudentId]);
+
+  const fetchStudents = async () => {
     try {
       const token = localStorage.getItem('token');
-      // Veli olarak baglı öğrencinin ödevlerini getir (sinif bazli dinamik)
-      const response = await axios.get('https://odevtakipsistemi.onrender.com/api/homeworks/student/my', {
+      const res = await axios.get('https://odevtakipsistemi.onrender.com/api/users/students', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setStudents(Array.isArray(res.data) ? res.data : []);
+    } catch (e) {
+      console.error('Öğrenciler çekilemedi', e);
+    }
+  };
+
+  const fetchHomeworks = async (studentId) => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`https://odevtakipsistemi.onrender.com/api/homeworks/student/${studentId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setHomeworks(Array.isArray(response.data) ? response.data : (response.data?.data || []));
@@ -33,16 +56,11 @@ const ParentPanel = () => {
     }
   };
 
-  const fetchAttendance = async () => {
+  const fetchAttendance = async (studentId) => {
     try {
       const token = localStorage.getItem('token');
-      // Öğrencinin kendi devamsızlıklarını çek (my endpoint yok, user info'dan alınabilir)
-      const meRes = await axios.get('https://odevtakipsistemi.onrender.com/api/users/me', { headers: { Authorization: `Bearer ${token}` } });
-      const userId = meRes.data?.id;
-      if (userId) {
-        const res = await axios.get(`https://odevtakipsistemi.onrender.com/api/attendance/student/${userId}`, { headers: { Authorization: `Bearer ${token}` } });
-        setAttendance(Array.isArray(res.data) ? res.data : (res.data?.data || []));
-      }
+      const res = await axios.get(`https://odevtakipsistemi.onrender.com/api/attendance/student/${studentId}`, { headers: { Authorization: `Bearer ${token}` } });
+      setAttendance(Array.isArray(res.data) ? res.data : (res.data?.data || []));
     } catch (e) { console.error(e); }
   };
 
@@ -83,6 +101,14 @@ const ParentPanel = () => {
           </div>
         </div>
 
+        <div style={{ background: '#f8fafc', padding: '1.5rem', borderRadius: '12px', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '1rem', border: '1px solid var(--glass-border)' }}>
+          <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Öğrenci Seçin:</h3>
+          <select className="input-field" style={{ margin: 0, maxWidth: '300px' }} value={selectedStudentId} onChange={e => setSelectedStudentId(e.target.value)}>
+            <option value="">Lütfen bir öğrenci seçin</option>
+            {students.map(s => <option key={s.id} value={s.id}>{s.username} (Sınıf: {s.sinif_id || 'Atanmadı'})</option>)}
+          </select>
+        </div>
+
         <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', borderBottom: '1px solid var(--glass-border)', paddingBottom: '1rem' }}>
           <button onClick={() => setActiveTab('academic')} className={`btn-primary ${activeTab !== 'academic' ? 'outline' : ''}`} style={{ background: activeTab === 'academic' ? '' : 'transparent', color: activeTab === 'academic' ? '' : 'var(--text-dark)' }}>Not Kartı</button>
           <button onClick={() => setActiveTab('attendance')} className={`btn-primary ${activeTab !== 'attendance' ? 'outline' : ''}`} style={{ background: activeTab === 'attendance' ? '' : 'transparent', color: activeTab === 'attendance' ? '' : 'var(--text-dark)' }}>Devamsızlık Takibi</button>
@@ -95,8 +121,10 @@ const ParentPanel = () => {
               Öğrenci Not Kartı & Performans Durumu
             </h3>
 
-            {loading ? (
-              <p>Yükleniyor...</p>
+            {!selectedStudentId ? (
+              <p style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>Lütfen yukarıdan bir öğrenci seçin.</p>
+            ) : loading ? (
+              <p style={{ textAlign: 'center', padding: '2rem' }}>Yükleniyor...</p>
             ) : (
               <div className="table-container" style={{ marginBottom: '2rem' }}>
                 <table className="glass-table">
@@ -122,10 +150,10 @@ const ParentPanel = () => {
                         return (
                           <tr key={hw.id} className={isSubmitted ? 'row-success' : 'row-danger'}>
                             <td>
-                              <div style={{ fontWeight: '600' }}>{hw.ders_adi}</div>
+                              <div style={{ fontWeight: '600' }}>{hw.ders_adi || '-'}</div>
                               <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{hw.baslik}</div>
                             </td>
-                            <td>{hw.ogretmen_adi}</td>
+                            <td>{hw.ogretmen_adi || '-'}</td>
                             <td>
                               <span className={`status-badge ${isSubmitted ? 'success' : 'danger'}`}>
                                 {isSubmitted ? 'Teslim Edildi' : 'Bekliyor / Yapılmadı'}
@@ -159,19 +187,24 @@ const ParentPanel = () => {
             <h3 style={{ marginBottom: '1rem' }}>
               <CalendarX2 size={20} color="var(--danger)" /> Devamsızlık Takibi
             </h3>
-            <table className="glass-table">
-              <thead><tr><th>Tarih</th><th>Durum</th></tr></thead>
-              <tbody>
-                {attendance.length === 0 ? <tr><td colSpan="2" style={{ textAlign: 'center' }}>Devamsızlık kaydı bulunmuyor.</td></tr> :
-                  attendance.map(a => (
-                    <tr key={a.id}>
-                      <td>{new Date(a.tarih).toLocaleDateString('tr-TR')}</td>
-                      <td><span className={`status-badge ${a.durum === 'Raporlu' || a.durum === 'İzinli' ? 'success' : 'danger'}`}>{a.durum}</span></td>
-                    </tr>
-                  ))
-                }
-              </tbody>
-            </table>
+            
+            {!selectedStudentId ? (
+              <p style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>Lütfen yukarıdan bir öğrenci seçin.</p>
+            ) : (
+              <table className="glass-table">
+                <thead><tr><th>Tarih</th><th>Durum</th></tr></thead>
+                <tbody>
+                  {attendance.length === 0 ? <tr><td colSpan="2" style={{ textAlign: 'center' }}>Devamsızlık kaydı bulunmuyor.</td></tr> :
+                    attendance.map(a => (
+                      <tr key={a.id}>
+                        <td>{new Date(a.tarih).toLocaleDateString('tr-TR')}</td>
+                        <td><span className={`status-badge ${a.durum === 'Raporlu' || a.durum === 'İzinli' ? 'success' : 'danger'}`}>{a.durum}</span></td>
+                      </tr>
+                    ))
+                  }
+                </tbody>
+              </table>
+            )}
           </div>
         )}
       </div>
