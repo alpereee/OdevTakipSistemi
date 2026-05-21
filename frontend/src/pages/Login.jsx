@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { LogIn, KeyRound } from 'lucide-react';
@@ -7,6 +7,19 @@ const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [schoolName, setSchoolName] = useState('Ödev Takip Sistemi');
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await axios.get('https://odevtakipsistemi.onrender.com/api/settings');
+        if (res.data && res.data.school_name) {
+          setSchoolName(res.data.school_name);
+        }
+      } catch (e) { console.error('Ayarlar yüklenemedi:', e); }
+    };
+    fetchSettings();
+  }, []);
 
   // Forgot Password States
   const [isForgotPassword, setIsForgotPassword] = useState(false);
@@ -80,7 +93,7 @@ const Login = () => {
           }}>
             <LogIn color="white" size={32} />
           </div>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 'bold' }}>Ödev Takip Sistemi</h1>
+          <h1 style={{ fontSize: '1.75rem', fontWeight: 'bold' }}>{schoolName}</h1>
           <p style={{ color: 'var(--text-muted)' }}>Lütfen hesabınıza giriş yapın</p>
         </div>
 

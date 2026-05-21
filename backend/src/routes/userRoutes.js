@@ -26,8 +26,8 @@ router.get('/recipients', verifyToken, userController.getRecipients);
 // Mevcut kullanıcının kendi bilgilerini alması
 router.get('/me', verifyToken, userController.getMe);
 
-// Öğrencileri listele (Yönetici ve Öğretmen)
-router.get('/students', verifyToken, checkRole([1, 2]), userController.getAllStudents);
+// Öğrencileri listele (Yönetici, Öğretmen, Veli)
+router.get('/students', verifyToken, checkRole([1, 2, 4]), userController.getAllStudents);
 
 // Liderlik tablosunu getir
 router.get('/leaderboard/:sinif_id', verifyToken, userController.getLeaderboard);

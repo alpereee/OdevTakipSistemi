@@ -4,11 +4,13 @@ import AdminPanel from './pages/AdminPanel';
 import TeacherPanel from './pages/TeacherPanel';
 import StudentPanel from './pages/StudentPanel';
 import ParentPanel from './pages/ParentPanel';
+import Header from './components/Header';
 
 function App() {
   return (
     <Router>
       <div className="app-container">
+        <Header />
         <Routes>
           <Route path="/" element={<Navigate to="/login" />} />
           <Route path="/login" element={<Login />} />

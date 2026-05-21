@@ -101,6 +101,12 @@ const AdminPanel = () => {
         system_status: systemStatus
       }, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       alert('Ayarlar başarıyla kaydedildi!');
+      fetchSettings(); // Kaydettikten sonra formu güncelle
+      
+      // Aynı zamanda tüm sayfada (Header vb.) yansıması için reload da yapılabilir 
+      // Ancak Header global ise React Context veya window.dispatchEvent de kullanılabilir
+      // En temizi sayfayı yenilemektir
+      window.location.reload();
     } catch (e) { alert('Ayarlar kaydedilirken hata oluştu.'); }
   };
 
