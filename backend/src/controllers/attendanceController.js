@@ -2,7 +2,7 @@ const db = require('../config/database');
 
 const getAttendanceByStudent = (req, res) => {
     const { student_id } = req.params;
-    const query = \`SELECT * FROM devamsizliklar WHERE ogrenci_id = ? ORDER BY tarih DESC\`;
+    const query = `SELECT * FROM devamsizliklar WHERE ogrenci_id = ? ORDER BY tarih DESC`;
     
     db.all(query, [student_id], (err, rows) => {
         if (err) {
@@ -19,7 +19,7 @@ const addAttendance = (req, res) => {
         return res.status(400).json({ message: 'Lütfen öğrenci, tarih ve durum bilgilerini girin.' });
     }
 
-    const query = \`INSERT INTO devamsizliklar (ogrenci_id, tarih, durum) VALUES (?, ?, ?)\`;
+    const query = `INSERT INTO devamsizliklar (ogrenci_id, tarih, durum) VALUES (?, ?, ?)`;
     
     db.run(query, [ogrenci_id, tarih, durum], function(err) {
         if (err) {
