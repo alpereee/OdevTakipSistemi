@@ -52,7 +52,7 @@ const TeacherPanel = () => {
   // selectedClassId değişince ödevleri ve öğrencileri yeniden getir
   useEffect(() => {
     if (selectedClassId) {
-      fetchHomeworks();
+      fetchHomeworks(selectedClassId); // Stale closure olmaması için ID argüman geç
       fetchAllStudents();
     }
   }, [selectedClassId]);
@@ -81,9 +81,16 @@ const TeacherPanel = () => {
 
   const fetchAllStudents = async () => {
       try {
-          const res = await axios.get('https://odevtakipsistemi.onrender.com/api/users/students', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
-          setAllStudents(res.data || []);
-      } catch (e) {}
+          const res = await axios.get('https://odevtakipsistemi.onrender.com/api/users/students', {
+              headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          });
+          const data = Array.isArray(res.data) ? res.data : [];
+          // sinif_id'yi her zaman Number'a normalize et (tip uyuşmazlığını engelle)
+          setAllStudents(data.map(s => ({ ...s, sinif_id: s.sinif_id != null ? Number(s.sinif_id) : null })));
+      } catch (e) {
+          console.error('Öğrenci listesi çekilemedi:', e.response?.data || e.message);
+          setAllStudents([]);
+      }
   };
 
   const handleAssignClass = async (studentId, sinif_id) => {
@@ -121,11 +128,16 @@ const TeacherPanel = () => {
       } catch(e) { alert('Hata'); }
   };
 
-  const fetchHomeworks = async () => {
+  // fetchHomeworks sinif_id parametresini argüman olarak alır (stale closure önlenir)
+  const fetchHomeworks = async (classId) => {
+    const id = classId || selectedClassId || '1';
     try {
-      const res = await axios.get(`https://odevtakipsistemi.onrender.com/api/homeworks/class/${selectedClassId || 1}`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
-      setHomeworks(Array.isArray(res.data) ? res.data : (res.data?.data || []));
+      const res = await axios.get(`https://odevtakipsistemi.onrender.com/api/homeworks/class/${id}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      setHomeworks(Array.isArray(res.data) ? res.data : []);
     } catch (e) {
+      console.error('Ödevler çekilemedi:', e.response?.data || e.message);
       setHomeworks([]);
     }
   };
@@ -180,21 +192,23 @@ const TeacherPanel = () => {
     
     // Sınıf ID 1 varsayılıyor test için ama classes entegrasyonu varsa dinamik seçilebilir.
     const payload = {
-        ders_id: 1, 
-        sinif_id: selectedClassId || 1, 
+        ders_id: 1,
+        sinif_id: selectedClassId,
         baslik,
-        aciklama, 
-        EstimatedDuration: estimatedDuration, 
+        aciklama,
+        EstimatedDuration: Number(estimatedDuration),
         teslim_tarihi: teslimTarihi
     };
 
     try {
-      await axios.post('https://odevtakipsistemi.onrender.com/api/homeworks', payload, { 
-        headers: { 
-          Authorization: `Bearer ${token}`
-        } 
+      await axios.post('https://odevtakipsistemi.onrender.com/api/homeworks', payload, {
+        headers: { Authorization: `Bearer ${token}` }
       });
-      alert('Ödev eklendi'); setShowForm(false); fetchHomeworks(); checkHomeworkLoad(selectedClassId || 1, teslimTarihi);
+      alert('Ödev eklendi!');
+      setShowForm(false);
+      setBaslik(''); setAciklama(''); setEstimatedDuration(''); setTeslimTarihi('');
+      fetchHomeworks(selectedClassId); // Stale closure'ı önlemek için ID'yi argüman geç
+      checkHomeworkLoad(selectedClassId, teslimTarihi);
     } catch (e) { 
         if (e.response && e.response.status === 400 && e.response.data.warning) {
             setHighLoadError(e.response.data.warning);
@@ -332,7 +346,7 @@ const TeacherPanel = () => {
                                 onChange={e => setSelectedStudentToAdd(e.target.value)}
                             >
                                 <option value="">-- Eklenecek öğrenci seçin --</option>
-                                {allStudents.filter(s => !s.sinif_id || s.sinif_id.toString() !== selectedClassId).map(s => (
+                                {allStudents.filter(s => s.sinif_id === null || Number(s.sinif_id) !== Number(selectedClassId)).map(s => (
                                     <option key={s.id} value={s.id}>{s.username} {s.sinif_id ? `(Bk. Sınıf ${s.sinif_id})` : '(Boşta)'}</option>
                                 ))}
                             </select>
