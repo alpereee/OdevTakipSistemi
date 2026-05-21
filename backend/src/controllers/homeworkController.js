@@ -1,6 +1,7 @@
 const db = require('../config/database');
 
 const createHomework = (req, res) => {
+    console.log("[POST /api/homeworks] createHomework çalıştı. Gelen req.body:", req.body);
     const { ders_id, sinif_id, baslik, aciklama, teslim_tarihi, EstimatedDuration } = req.body;
     const ogretmen_id = req.userId; // Middleware'den gelecek
 
@@ -48,6 +49,7 @@ const createHomework = (req, res) => {
 
 // Sınıfa göre ödevleri listeleme
 const getHomeworksByClass = (req, res) => {
+    console.log("[GET /api/homeworks/class/:sinif_id] getHomeworksByClass çalıştı. Gelen req.params:", req.params);
     const { sinif_id } = req.params;
 
     const query = `SELECT o.*, d.ad as ders_adi, u.username as ogretmen_adi 

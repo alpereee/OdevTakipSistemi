@@ -346,7 +346,7 @@ const TeacherPanel = () => {
                                 onChange={e => setSelectedStudentToAdd(e.target.value)}
                             >
                                 <option value="">-- Eklenecek öğrenci seçin --</option>
-                                {allStudents.filter(s => s.sinif_id === null || Number(s.sinif_id) !== Number(selectedClassId)).map(s => (
+                                {allStudents.filter(s => !s.sinif_id || String(s.sinif_id) !== String(selectedClassId)).map(s => (
                                     <option key={s.id} value={s.id}>{s.username} {s.sinif_id ? `(Bk. Sınıf ${s.sinif_id})` : '(Boşta)'}</option>
                                 ))}
                             </select>
